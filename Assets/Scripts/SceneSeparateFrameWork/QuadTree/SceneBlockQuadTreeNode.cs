@@ -68,6 +68,8 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
 
     public SceneBlockQuadTreeNode<T> Insert(T obj, int depth, int maxDepth)
     {
+        if (m_ObjectList.Contains(obj))
+            return this;
         if (depth < maxDepth)
         {
             SceneBlockQuadTreeNode<T> node = GetContainerNode(obj);

@@ -115,6 +115,31 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
         }
     }
 
+    public void Trigger(Camera camera, TriggerHandle<T> handle)
+    {
+        if (handle == null)
+            return;
+
+        for (int i = 0; i < m_ChildNodes.Length; i++)
+        {
+            var node = m_ChildNodes[i];
+            if (node != null)
+                node.Trigger(camera, handle);
+        }
+
+        if (!m_Bounds.IsBoundsOutOfCamera(camera))
+        {
+            for (int i = 0; i < m_ObjectList.Count; i++)
+            {
+                if (m_ObjectList[i] != null)
+                {
+                    if (!m_ObjectList[i].Bounds.IsBoundsOutOfCamera(camera))
+                        handle(m_ObjectList[i]);
+                }
+            }
+        }
+    }
+
     private SceneBlockQuadTreeNode<T> GetContainerNode(T obj, int depth)
     {
         Vector3 halfSize = new Vector3(m_Bounds.size.x / 2, m_Bounds.size.y, m_Bounds.size.z / 2);

@@ -19,6 +19,52 @@ public static class BoundsEx
         Gizmos.DrawWireCube(bounds.center, bounds.size);
     }
 
+    public static bool IsBoundsOutOfCamera(this Bounds bounds, Camera camera)
+    {
+        Matrix4x4 matrix = camera.projectionMatrix*camera.worldToCameraMatrix;
+        Vector3 projPos =
+            matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x/2, bounds.center.y + bounds.size.y/2,
+                bounds.center.z + bounds.size.z/2));
+        if (!IsPosOutOfCCV(projPos))
+            return false;
+        projPos =
+            matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
+                bounds.center.z + bounds.size.z / 2));
+        if (!IsPosOutOfCCV(projPos))
+            return false;
+        projPos =
+            matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
+                bounds.center.z + bounds.size.z / 2));
+        if (!IsPosOutOfCCV(projPos))
+            return false;
+        projPos =
+            matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
+                bounds.center.z + bounds.size.z / 2));
+        if (!IsPosOutOfCCV(projPos))
+            return false;
+        projPos =
+            matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
+                bounds.center.z - bounds.size.z / 2));
+        if (!IsPosOutOfCCV(projPos))
+            return false;
+        projPos =
+            matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
+                bounds.center.z - bounds.size.z / 2));
+        if (!IsPosOutOfCCV(projPos))
+            return false;
+        projPos =
+            matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
+                bounds.center.z - bounds.size.z / 2));
+        if (!IsPosOutOfCCV(projPos))
+            return false;
+        projPos =
+            matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
+                bounds.center.z - bounds.size.z / 2));
+        if (!IsPosOutOfCCV(projPos))
+            return false;
+        return true;
+    }
+
     public static bool IsBoundsContainsAnotherBounds(this Bounds bounds, Bounds compareTo)
     {
         //if (!bounds.Contains(compareTo.center))
@@ -47,5 +93,12 @@ public static class BoundsEx
         if (!bounds.Contains(compareTo.center + new Vector3(-compareTo.size.x / 2, -compareTo.size.y / 2, compareTo.size.z / 2)))
             return false;
         return true;
+    }
+
+    private static bool IsPosOutOfCCV(Vector3 projPos)
+    {
+        if (projPos.x <= -1 || projPos.x >= 1 || projPos.y <= -1 || projPos.y >= 1 || projPos.z <= -1 || projPos.z >= 1)
+            return true;
+        return false;
     }
 }

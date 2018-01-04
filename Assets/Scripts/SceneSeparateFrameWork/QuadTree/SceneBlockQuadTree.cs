@@ -66,6 +66,14 @@ public class SceneBlockQuadTree<T> where T : ISceneBlockObject
     {
         if (handle == null)
             return;
+        m_Root.Trigger(bounds, handle);
+    }
+
+    public void Trigger(Camera camera, TriggerHandle<T> handle)
+    {
+        if (handle == null)
+            return;
+        m_Root.Trigger(camera, handle);
     }
 
     public static implicit operator bool(SceneBlockQuadTree<T> tree)

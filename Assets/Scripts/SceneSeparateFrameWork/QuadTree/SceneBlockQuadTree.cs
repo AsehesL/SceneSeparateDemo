@@ -35,10 +35,10 @@ public class SceneBlockQuadTree<T> where T : ISceneBlockObject
     
     public int m_MaxDepth;
 
-    public void Build(Vector3 center, Vector3 size, int maxDepth)
+    public SceneBlockQuadTree(Vector3 center, Vector3 size, int maxDepth)
     {
         this.m_MaxDepth = maxDepth;
-        this.m_Root = new SceneBlockQuadTreeNode<T>(new Bounds(center, size));
+        this.m_Root = new SceneBlockQuadTreeNode<T>(new Bounds(center, size), 0);
     }
 
     public void Add(T item)

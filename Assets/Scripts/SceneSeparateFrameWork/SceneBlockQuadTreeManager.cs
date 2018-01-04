@@ -47,14 +47,15 @@ public class SceneBlockQuadTreeManager : MonoBehaviour
     private float m_MaxDestroyTime;
     private bool m_Asyn;
 
-    public void Init(int maxCreateCount, float maxRefreshTime, float maxDestroyTime, bool asyn)
+    public void Init(int maxCreateCount, float maxRefreshTime, float maxDestroyTime, bool asyn, Vector3 center, Vector3 size, Vector3 visibleSize, int quadTreeDepth)
     {
         if (m_IsInitialized)
             return;
-        m_QuadTree = new SceneBlockQuadTree<SceneBlockObject>();
+        m_QuadTree = new SceneBlockQuadTree<SceneBlockObject>(center, size, quadTreeDepth);
+        m_CheckBounds = new Bounds(Vector3.zero, visibleSize);
         m_LoadedObjectList = new List<SceneBlockObject>();
         m_PreDestroyObjectList = new List<SceneBlockObject>();
-        m_TriggerHandle = new TriggerHandle<SceneBlockObject>(this.TriggerHandle);
+        m_TriggerHandle = new TriggerHandle<SceneBlockObject>(this.TriggerHandle); 
 
         m_MaxCreateCount = maxCreateCount;
         m_MaxRefreshTime = maxRefreshTime;

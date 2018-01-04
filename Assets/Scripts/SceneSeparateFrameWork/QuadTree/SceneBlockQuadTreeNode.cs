@@ -36,9 +36,10 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
 
     private List<T> m_ObjectList;
 
-    public SceneBlockQuadTreeNode(Bounds bounds)
+    public SceneBlockQuadTreeNode(Bounds bounds, int depth)
     {
         m_Bounds = bounds;
+        m_CurrentDepth = depth;
         m_ObjectList = new List<T>();
     }
 
@@ -72,7 +73,7 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
             return this;
         if (depth < maxDepth)
         {
-            SceneBlockQuadTreeNode<T> node = GetContainerNode(obj);
+            SceneBlockQuadTreeNode<T> node = GetContainerNode(obj, depth);
             if (node != null)
                 return node.Insert(obj, depth + 1, maxDepth);
         }
@@ -114,26 +115,26 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
         }
     }
 
-    private SceneBlockQuadTreeNode<T> GetContainerNode(T obj)
+    private SceneBlockQuadTreeNode<T> GetContainerNode(T obj, int depth)
     {
         Vector3 halfSize = new Vector3(m_Bounds.size.x / 2, m_Bounds.size.y, m_Bounds.size.z / 2);
         SceneBlockQuadTreeNode<T> result = null;
-        result = GetContainerNode(ref m_ChildNodes[0], m_Bounds.center + new Vector3(-halfSize.x / 2, 0, -halfSize.z / 2),
+        result = GetContainerNode(ref m_ChildNodes[0], depth, m_Bounds.center + new Vector3(-halfSize.x / 2, 0, -halfSize.z / 2),
             halfSize, obj);
         if (result != null)
             return result;
 
-        result = GetContainerNode(ref m_ChildNodes[1], m_Bounds.center + new Vector3(-halfSize.x / 2, 0, halfSize.z / 2),
+        result = GetContainerNode(ref m_ChildNodes[1], depth, m_Bounds.center + new Vector3(-halfSize.x / 2, 0, halfSize.z / 2),
             halfSize, obj);
         if (result != null)
             return result;
 
-        result = GetContainerNode(ref m_ChildNodes[2], m_Bounds.center + new Vector3(halfSize.x / 2, 0, halfSize.z / 2),
+        result = GetContainerNode(ref m_ChildNodes[2], depth, m_Bounds.center + new Vector3(halfSize.x / 2, 0, halfSize.z / 2),
             halfSize, obj);
         if (result != null)
             return result;
 
-        result = GetContainerNode(ref m_ChildNodes[3], m_Bounds.center + new Vector3(halfSize.x / 2, 0, -halfSize.z / 2),
+        result = GetContainerNode(ref m_ChildNodes[3], depth, m_Bounds.center + new Vector3(halfSize.x / 2, 0, -halfSize.z / 2),
             halfSize, obj);
         if (result != null)
             return result;
@@ -141,7 +142,7 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
         return null;
     }
 
-    private SceneBlockQuadTreeNode<T> GetContainerNode(ref SceneBlockQuadTreeNode<T> node, Vector3 centerPos, Vector3 size, T obj)
+    private SceneBlockQuadTreeNode<T> GetContainerNode(ref SceneBlockQuadTreeNode<T> node, int depth, Vector3 centerPos, Vector3 size, T obj)
     {
         SceneBlockQuadTreeNode<T> result = null;
         if (node == null)
@@ -149,7 +150,7 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
             Bounds bounds = new Bounds(centerPos, size);
             if (bounds.IsBoundsContainsAnotherBounds(obj.Bounds))
             {
-                SceneBlockQuadTreeNode<T> newNode = new SceneBlockQuadTreeNode<T>(bounds);
+                SceneBlockQuadTreeNode<T> newNode = new SceneBlockQuadTreeNode<T>(bounds, depth+1);
                 node = newNode;
                 result = node;
             }

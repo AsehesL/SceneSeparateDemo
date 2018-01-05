@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// 该触发器根据相机裁剪区域触发
+/// </summary>
 public class SceneCameraDetector : SceneDetectorBase
 {
     private Camera m_Camera;

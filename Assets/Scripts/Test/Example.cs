@@ -2,6 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// 测试场景物体-实际应用中可以根据需求增加或修改，只需实现ISceneObject接口即可
+/// </summary>
 [System.Serializable]
 public class TestSceneObject : ISceneObject
 {

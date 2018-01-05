@@ -98,7 +98,7 @@ public class Example : MonoBehaviour
     
     void Update()
     {
-        m_Controller.RefreshPosition(detector);
+        m_Controller.RefreshDetector(detector);
     }
 
     void OnDrawGizmosSelected()

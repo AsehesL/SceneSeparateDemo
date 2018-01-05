@@ -28,9 +28,9 @@ public class SceneObjectLoadController : MonoBehaviour
     private Vector3 m_OldDestroyRefreshPosition;
 
     /// <summary>
-    /// 待加载队列
+    /// 异步任务队列
     /// </summary>
-    private Queue<SceneObject> m_CreateObjsQueue;
+    private Queue<SceneObject> m_ProcessTaskQueue;
 
     /// <summary>
     /// 已加载的物体列表
@@ -44,7 +44,7 @@ public class SceneObjectLoadController : MonoBehaviour
 
     private TriggerHandle<SceneObject> m_TriggerHandle;
 
-    private bool m_IsCreating;
+    private bool m_IsTaskRunning;
 
     private bool m_IsInitialized;
 
@@ -98,6 +98,10 @@ public class SceneObjectLoadController : MonoBehaviour
         Init(center, size, asyn, 25, 15, 1, 5);
     }
 
+    /// <summary>
+    /// 添加场景物体
+    /// </summary>
+    /// <param name="obj"></param>
     public void AddSceneBlockObject(ISceneObject obj)
     {
         if (!m_IsInitialized)
@@ -106,8 +110,10 @@ public class SceneObjectLoadController : MonoBehaviour
             return;
         if (obj == null)
             return;
+        //使用SceneObject包装
         SceneObject sbobj = new SceneObject(obj);
         m_QuadTree.Add(sbobj);
+        //如果当前触发器存在，直接物体是否可触发，如果可触发，则创建物体
         if (m_CurrentDetector != null && m_CurrentDetector.IsTrigger(sbobj.Bounds))
         {
             DoCreateInternal(sbobj);
@@ -115,22 +121,26 @@ public class SceneObjectLoadController : MonoBehaviour
     }
 
     /// <summary>
-    /// 刷新坐标
+    /// 刷新触发器
     /// </summary>
-    /// <param name="position">坐标</param>
-    public void RefreshPosition(IDetector detector)
+    /// <param name="detector">触发器</param>
+    public void RefreshDetector(IDetector detector)
     {
         if (!m_IsInitialized)
             return;
+        //只有坐标发生改变才调用
         if (m_OldRefreshPosition != detector.Position)
         {
             m_RefreshTime += Time.deltaTime;
+            //达到刷新时间才刷新，避免区域更新频繁
             if (m_RefreshTime > m_MaxRefreshTime)
             {
                 m_OldRefreshPosition = detector.Position;
                 m_RefreshTime = 0;
                 m_CurrentDetector = detector;
+                //进行触发检测
                 m_QuadTree.Trigger(detector, m_TriggerHandle);
+                //标记超出区域的物体
                 MarkOutofBoundsObjs();
                 //m_IsInitLoadComplete = true;
             }
@@ -144,6 +154,7 @@ public class SceneObjectLoadController : MonoBehaviour
                 {
                     m_OldDestroyRefreshPosition = detector.Position;
                     m_DestroyRefreshTime = 0;
+                    //删除超出区域的物体
                     DestroyOutOfBoundsObjs();
                 }
             }
@@ -158,13 +169,13 @@ public class SceneObjectLoadController : MonoBehaviour
     {
         if (data == null)
             return;
-        if (data.Flag == SceneObject.CreateFlag.Old) //如果发生触发的物体已经被创建则标记为不销毁
+        if (data.Flag == SceneObject.CreateFlag.Old) //如果发生触发的物体已经被创建则标记为新物体，以确保不会被删掉
         {
-            data.Flag = SceneObject.CreateFlag.DontDestroy;
+            data.Flag = SceneObject.CreateFlag.New;
         }
-        else if (data.Flag == SceneObject.CreateFlag.OutofBounds)
+        else if (data.Flag == SceneObject.CreateFlag.OutofBounds)//如果发生触发的物体已经被标记为超出区域，则从待删除列表移除该物体，并标记为新物体
         {
-            data.Flag = SceneObject.CreateFlag.DontDestroy;
+            data.Flag = SceneObject.CreateFlag.New;
             if (m_PreDestroyObjectList.Remove(data))
             {
                 m_LoadedObjectList.Add(data);
@@ -176,10 +187,12 @@ public class SceneObjectLoadController : MonoBehaviour
         }
     }
 
+    //执行创建物体
     private void DoCreateInternal(SceneObject data)
     {
+        //加入已加载列表
         m_LoadedObjectList.Add(data);
-
+        //创建物体
         CreateObject(data, m_Asyn);
         //data.Create(transform);
         //if (OnSceneBlockObjectCreate != null)
@@ -196,28 +209,29 @@ public class SceneObjectLoadController : MonoBehaviour
         int i = 0;
         while (i < m_LoadedObjectList.Count)
         {
-            if (m_LoadedObjectList[i].Flag == SceneObject.CreateFlag.Old)
+            if (m_LoadedObjectList[i].Flag == SceneObject.CreateFlag.Old)//已加载物体标记仍然为Old，说明该物体没有进入触发区域，即该物体在区域外
             {
-
-                //m_LoadedObjectList[i].Destroy();
                 m_LoadedObjectList[i].Flag = SceneObject.CreateFlag.OutofBounds;
                 m_PreDestroyObjectList.Add(m_LoadedObjectList[i]);
-                //DestroyObject(m_LoadedObjectList[i], kTestAsyn);
                 m_LoadedObjectList.RemoveAt(i);
             }
             else
             {
-                m_LoadedObjectList[i].Flag = SceneObject.CreateFlag.Old;
+                m_LoadedObjectList[i].Flag = SceneObject.CreateFlag.Old;//其它物体标记为旧
                 i++;
             }
         }
     }
 
+    /// <summary>
+    /// 删除超出区域外的物体
+    /// </summary>
     void DestroyOutOfBoundsObjs()
     {
         int i = 0;
         while (i < m_PreDestroyObjectList.Count)
         {
+            //当待删除列表物体小于最小创建物体时跳出，确保创建的物体始终大于最小创建物体数
             if (m_PreDestroyObjectList.Count <= m_MinCreateCount)
             {
                 return;
@@ -227,11 +241,8 @@ public class SceneObjectLoadController : MonoBehaviour
                 m_PreDestroyObjectList.RemoveAt(i);
                 continue;
             }
-            if (m_PreDestroyObjectList[i].Flag == SceneObject.CreateFlag.OutofBounds)
+            if (m_PreDestroyObjectList[i].Flag == SceneObject.CreateFlag.OutofBounds)//将标记超出区域的物体删除
             {
-                //m_PreDestroyObjectList[i].Flag = SceneBlockObjectWarper.CreateFlag.None;
-                //if (OnSceneBlockObjectDestroy != null)
-                //    OnSceneBlockObjectDestroy.Invoke(m_PreDestroyObjectList[i].targetObj);
                 DestroyObject(m_PreDestroyObjectList[i], m_Asyn);
                 m_PreDestroyObjectList.RemoveAt(i);
                 continue;
@@ -240,123 +251,148 @@ public class SceneObjectLoadController : MonoBehaviour
         }
     }
 
-    private void CreateObject(SceneObject warper, bool asyn)
+    /// <summary>
+    /// 创建物体
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="asyn"></param>
+    private void CreateObject(SceneObject obj, bool asyn)
     {
-        if (warper == null)
+        if (obj == null)
             return;
-        if (warper.TargetObj == null)
+        if (obj.TargetObj == null)
             return;
-        if (warper.Flag == SceneObject.CreateFlag.None)
+        if (obj.Flag == SceneObject.CreateFlag.None)
         {
             if (!asyn)
-                CreateObjectSync(warper);
+                CreateObjectSync(obj);
             else
-                ProcessObjectAsyn(warper, true);
-            warper.Flag = SceneObject.CreateFlag.DontDestroy;
+                ProcessObjectAsyn(obj, true);
+            obj.Flag = SceneObject.CreateFlag.New;//被创建的物体标记为New
         }
     }
 
-    private void DestroyObject(SceneObject warper, bool asyn)
+    /// <summary>
+    /// 删除物体
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="asyn"></param>
+    private void DestroyObject(SceneObject obj, bool asyn)
     {
-        if (warper == null)
+        if (obj == null)
             return;
-        if (warper.Flag == SceneObject.CreateFlag.None)
+        if (obj.Flag == SceneObject.CreateFlag.None)
             return;
-        if (warper.TargetObj == null)
+        if (obj.TargetObj == null)
             return;
-        //if (warper.targetObj.TargetGameObject == null)
-        //    return;
         if (!asyn)
-            DestroyObjectSync(warper);
+            DestroyObjectSync(obj);
         else
-            ProcessObjectAsyn(warper, false);
-        warper.Flag = SceneObject.CreateFlag.None;
+            ProcessObjectAsyn(obj, false);
+        obj.Flag = SceneObject.CreateFlag.None;//被删除的物体标记为None
     }
 
-    private void CreateObjectSync(SceneObject warper)
+    /// <summary>
+    /// 同步方式创建物体
+    /// </summary>
+    /// <param name="obj"></param>
+    private void CreateObjectSync(SceneObject obj)
     {
-        if (warper.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareDestroy)
+        if (obj.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareDestroy)//如果标记为IsPrepareDestroy表示物体已经创建并正在等待删除，则直接设为None并返回
         {
-            warper.ProcessFlag = SceneObject.CreatingProcessFlag.None;
+            obj.ProcessFlag = SceneObject.CreatingProcessFlag.None;
             return;
         }
-        warper.OnShow(transform);
+        obj.OnShow(transform);//执行OnShow
     }
 
-    private void DestroyObjectSync(SceneObject warper)
+    /// <summary>
+    /// 同步方式销毁物体
+    /// </summary>
+    /// <param name="obj"></param>
+    private void DestroyObjectSync(SceneObject obj)
     {
-        if (warper.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareCreate)
+        if (obj.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareCreate)//如果物体标记为IsPrepareCreate表示物体未创建并正在等待创建，则直接设为None并放回
         {
-            warper.ProcessFlag = SceneObject.CreatingProcessFlag.None;
+            obj.ProcessFlag = SceneObject.CreatingProcessFlag.None;
             return;
         }
-        warper.OnHide();
+        obj.OnHide();//执行OnHide
     }
 
-    private void ProcessObjectAsyn(SceneObject warper, bool create)
+    /// <summary>
+    /// 异步处理
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="create"></param>
+    private void ProcessObjectAsyn(SceneObject obj, bool create)
     {
         if (create)
         {
-            if (warper.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareDestroy)
+            if (obj.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareDestroy)//表示物体已经创建并等待销毁，则设置为None并跳过
             {
-                warper.ProcessFlag = SceneObject.CreatingProcessFlag.None;
+                obj.ProcessFlag = SceneObject.CreatingProcessFlag.None;
                 return;
             }
-            if (warper.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareCreate)
+            if (obj.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareCreate)//已经开始等待创建，则跳过
                 return;
-            warper.ProcessFlag = SceneObject.CreatingProcessFlag.IsPrepareCreate;
+            obj.ProcessFlag = SceneObject.CreatingProcessFlag.IsPrepareCreate;//设置为等待开始创建
         }
         else
         {
-            if (warper.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareCreate)
+            if (obj.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareCreate)//表示物体未创建并等待创建，则设置为None并跳过
             {
-                warper.ProcessFlag = SceneObject.CreatingProcessFlag.None;
+                obj.ProcessFlag = SceneObject.CreatingProcessFlag.None;
                 return;
             }
-            if (warper.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareDestroy)
+            if (obj.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareDestroy)//已经开始等待销毁，则跳过
                 return;
-            warper.ProcessFlag = SceneObject.CreatingProcessFlag.IsPrepareDestroy;
+            obj.ProcessFlag = SceneObject.CreatingProcessFlag.IsPrepareDestroy;//设置为等待开始销毁
         }
-        if (m_CreateObjsQueue == null)
-            m_CreateObjsQueue = new Queue<SceneObject>();
-        m_CreateObjsQueue.Enqueue(warper);
-        if (!m_IsCreating)
+        if (m_ProcessTaskQueue == null)
+            m_ProcessTaskQueue = new Queue<SceneObject>();
+        m_ProcessTaskQueue.Enqueue(obj);//加入
+        if (!m_IsTaskRunning)
         {
-            StartCoroutine(AsynCreateProcess());
+            StartCoroutine(AsynTaskProcess());//开始协程执行异步任务
         }
     }
 
-    private IEnumerator AsynCreateProcess()
+    /// <summary>
+    /// 异步任务
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator AsynTaskProcess()
     {
-        if (m_CreateObjsQueue == null)
+        if (m_ProcessTaskQueue == null)
             yield return 0;
-        m_IsCreating = true;
-        while (m_CreateObjsQueue.Count > 0)
+        m_IsTaskRunning = true;
+        while (m_ProcessTaskQueue.Count > 0)
         {
-            var warper = m_CreateObjsQueue.Dequeue();
-            if (warper != null)
+            var obj = m_ProcessTaskQueue.Dequeue();
+            if (obj != null)
             {
-                if (warper.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareCreate)
+                if (obj.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareCreate)//等待创建
                 {
-                    warper.ProcessFlag = SceneObject.CreatingProcessFlag.None;
-                    if (warper.OnShow(transform))
+                    obj.ProcessFlag = SceneObject.CreatingProcessFlag.None;
+                    if (obj.OnShow(transform))
                     {
                         if (m_WaitForFrame == null)
                             m_WaitForFrame = new WaitForEndOfFrame();
                         yield return m_WaitForFrame;
                     }
                 }
-                else if (warper.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareDestroy)
+                else if (obj.ProcessFlag == SceneObject.CreatingProcessFlag.IsPrepareDestroy)//等待销毁
                 {
-                    warper.ProcessFlag = SceneObject.CreatingProcessFlag.None;
-                    warper.OnHide();
+                    obj.ProcessFlag = SceneObject.CreatingProcessFlag.None;
+                    obj.OnHide();
                     if (m_WaitForFrame == null)
                         m_WaitForFrame = new WaitForEndOfFrame();
                     yield return m_WaitForFrame;
                 }
             }
         }
-        m_IsCreating = false;
+        m_IsTaskRunning = false;
     }
 
 #if UNITY_EDITOR

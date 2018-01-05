@@ -16,9 +16,9 @@ public class SceneObject : ISceneObject
         /// </summary>
         None,
         /// <summary>
-        /// 标记为不销毁
+        /// 标记为新物体
         /// </summary>
-        DontDestroy,
+        New,
         /// <summary>
         /// 标记为旧物体
         /// </summary>

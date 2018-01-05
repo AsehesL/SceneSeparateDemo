@@ -170,6 +170,7 @@ public class QuadTreeNode<T> where T : ISceneObject
         return result;
     }
 
+#if UNITY_EDITOR
     public void DrawNode(float h, float deltaH)
     {
         if (m_ChildNodes != null)
@@ -194,5 +195,14 @@ public class QuadTreeNode<T> where T : ISceneObject
     public void DrawArea(Color color)
     {
         m_Bounds.DrawBounds(color);
+        for (int i = 0; i < m_ObjectList.Count; i++)
+        {
+            if (m_ObjectList[i] != null && m_ObjectList[i] is SceneObject)
+            {
+                var scenobj = m_ObjectList[i] as SceneObject;
+                scenobj.DrawArea(Color.black);
+            }
+        }
     }
+#endif
 }

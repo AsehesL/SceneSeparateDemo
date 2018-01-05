@@ -102,14 +102,16 @@ public class QuadTree<T> where T : ISceneObject
         m_Root.Trigger(detector, handle);
     }
 
+    public static implicit operator bool(QuadTree<T> tree)
+    {
+        return tree != null;
+    }
+
+#if UNITY_EDITOR
     public void DrawTree(float h, float deltaH)
     {
         if (m_Root != null)
             m_Root.DrawNode(h, deltaH);
     }
-
-    public static implicit operator bool(QuadTree<T> tree)
-    {
-        return tree != null;
-    }
+#endif
 }

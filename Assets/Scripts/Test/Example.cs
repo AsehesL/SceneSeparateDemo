@@ -62,14 +62,11 @@ public class TestSceneObject : ISceneObject
 
 public class Example : MonoBehaviour
 {
+    public string desc;
+
     public List<TestSceneObject> loadObjects;
 
     public Bounds bounds;
-
-    public int maxCreateCount;
-
-    public float maxRefreshTime;
-    public float maxDestroyTime;
 
     public bool asyn;
 
@@ -82,12 +79,18 @@ public class Example : MonoBehaviour
         m_Controller = gameObject.GetComponent<SceneObjectLoadController>();
         if (m_Controller == null)
             m_Controller = gameObject.AddComponent<SceneObjectLoadController>();
-        m_Controller.Init(maxCreateCount, maxRefreshTime, maxDestroyTime, asyn, bounds.center, bounds.size, 5);
+        m_Controller.Init(bounds.center, bounds.size, asyn);
 
         for (int i = 0; i < loadObjects.Count; i++)
         {
             m_Controller.AddSceneBlockObject(loadObjects[i]);
         }
+    }
+
+    void OnGUI()
+    {
+        GUI.color = Color.red;
+        GUILayout.Label(desc);
     }
     
     void Update()

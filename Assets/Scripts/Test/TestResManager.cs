@@ -29,7 +29,7 @@ public class TestResManager : MonoBehaviour
 
         public void Release()
         {
-            Resources.UnloadAsset(m_Obj);
+            m_Obj = null;
         }
     }
 

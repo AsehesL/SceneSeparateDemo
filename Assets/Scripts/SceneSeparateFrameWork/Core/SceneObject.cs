@@ -81,4 +81,11 @@ public class SceneObject : ISceneObject
     {
         return m_TargetObj.OnShow(parent);
     }
+
+#if UNITY_EDITOR
+    public void DrawArea(Color color)
+    {
+        m_TargetObj.Bounds.DrawBounds(color);
+    }
+#endif
 }

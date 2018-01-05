@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 场景物件加载控制器
+/// </summary>
 public class SceneObjectLoadController : MonoBehaviour
 {
 
@@ -12,13 +15,21 @@ public class SceneObjectLoadController : MonoBehaviour
     /// </summary>
     private QuadTree<SceneObject> m_QuadTree;
 
+    /// <summary>
+    /// 刷新时间
+    /// </summary>
     private float m_RefreshTime;
+    /// <summary>
+    /// 销毁时间
+    /// </summary>
     private float m_DestroyRefreshTime;
-
-    private const int kMaxCreateObjectCount = 70;
+    
     private Vector3 m_OldRefreshPosition;
     private Vector3 m_OldDestroyRefreshPosition;
 
+    /// <summary>
+    /// 待加载队列
+    /// </summary>
     private Queue<SceneObject> m_CreateObjsQueue;
 
     /// <summary>
@@ -38,13 +49,25 @@ public class SceneObjectLoadController : MonoBehaviour
     private bool m_IsInitialized;
 
     private int m_MaxCreateCount;
+    private int m_MinCreateCount;
     private float m_MaxRefreshTime;
     private float m_MaxDestroyTime;
     private bool m_Asyn;
 
     private IDetector m_CurrentDetector;
 
-    public void Init(int maxCreateCount, float maxRefreshTime, float maxDestroyTime, bool asyn, Vector3 center, Vector3 size, int quadTreeDepth)
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="center">场景区域中心</param>
+    /// <param name="size">场景区域大小</param>
+    /// <param name="asyn">是否异步</param>
+    /// <param name="maxCreateCount">最大创建数量</param>
+    /// <param name="minCreateCount">最小创建数量</param>
+    /// <param name="maxRefreshTime">更新区域时间间隔</param>
+    /// <param name="maxDestroyTime">检查销毁时间间隔</param>
+    /// <param name="quadTreeDepth">四叉树深度</param>
+    public void Init(Vector3 center, Vector3 size, bool asyn, int maxCreateCount, int minCreateCount, float maxRefreshTime, float maxDestroyTime, int quadTreeDepth = 5)
     {
         if (m_IsInitialized)
             return;
@@ -54,11 +77,25 @@ public class SceneObjectLoadController : MonoBehaviour
         m_TriggerHandle = new TriggerHandle<SceneObject>(this.TriggerHandle); 
 
         m_MaxCreateCount = maxCreateCount;
+        m_MinCreateCount = minCreateCount;
         m_MaxRefreshTime = maxRefreshTime;
         m_MaxDestroyTime = maxDestroyTime;
         m_Asyn = asyn;
 
         m_IsInitialized = true;
+
+        m_RefreshTime = maxRefreshTime;
+    }
+
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="center">场景区域中心</param>
+    /// <param name="size">场景区域大小</param>
+    /// <param name="asyn">是否异步</param>
+    public void Init(Vector3 center, Vector3 size, bool asyn)
+    {
+        Init(center, size, asyn, 25, 15, 1, 5);
     }
 
     public void AddSceneBlockObject(ISceneObject obj)
@@ -100,7 +137,7 @@ public class SceneObjectLoadController : MonoBehaviour
         }
         if (m_OldDestroyRefreshPosition != detector.Position)
         {
-            if (m_PreDestroyObjectList != null && m_PreDestroyObjectList.Count >= kMaxCreateObjectCount)
+            if (m_PreDestroyObjectList != null && m_PreDestroyObjectList.Count >= m_MaxCreateCount)
             {
                 m_DestroyRefreshTime += Time.deltaTime;
                 if (m_DestroyRefreshTime > m_MaxDestroyTime)
@@ -181,7 +218,7 @@ public class SceneObjectLoadController : MonoBehaviour
         int i = 0;
         while (i < m_PreDestroyObjectList.Count)
         {
-            if (m_PreDestroyObjectList.Count <= m_MaxCreateCount)
+            if (m_PreDestroyObjectList.Count <= m_MinCreateCount)
             {
                 return;
             }
@@ -322,9 +359,12 @@ public class SceneObjectLoadController : MonoBehaviour
         m_IsCreating = false;
     }
 
+#if UNITY_EDITOR
+
     void OnDrawGizmosSelected()
     {
         if (m_QuadTree != null)
             m_QuadTree.DrawTree(0, 0.1f);
     }
+#endif
 }

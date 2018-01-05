@@ -3,15 +3,11 @@ using System.Collections;
 
 public static class BoundsEx
 {
-
-    public static void DrawBounds(this Bounds bounds, float H, float S, float V)
-    {
-        if (H > 1)
-            H = 0;
-        Color col = Color.HSVToRGB(H, S, V);
-        DrawBounds(bounds, col);
-    }
-
+    /// <summary>
+    /// 绘制包围盒
+    /// </summary>
+    /// <param name="bounds"></param>
+    /// <param name="color"></param>
     public static void DrawBounds(this Bounds bounds, Color color)
     {
         Gizmos.color = color;
@@ -19,6 +15,12 @@ public static class BoundsEx
         Gizmos.DrawWireCube(bounds.center, bounds.size);
     }
 
+    /// <summary>
+    /// 判断包围盒是否被相机裁剪
+    /// </summary>
+    /// <param name="bounds"></param>
+    /// <param name="camera"></param>
+    /// <returns></returns>
     public static bool IsBoundsOutOfCamera(this Bounds bounds, Camera camera)
     {
         Matrix4x4 matrix = camera.projectionMatrix*camera.worldToCameraMatrix;
@@ -65,6 +67,12 @@ public static class BoundsEx
         return true;
     }
 
+    /// <summary>
+    /// 判断包围盒是否包含另一个包围盒
+    /// </summary>
+    /// <param name="bounds"></param>
+    /// <param name="compareTo"></param>
+    /// <returns></returns>
     public static bool IsBoundsContainsAnotherBounds(this Bounds bounds, Bounds compareTo)
     {
         //if (!bounds.Contains(compareTo.center))

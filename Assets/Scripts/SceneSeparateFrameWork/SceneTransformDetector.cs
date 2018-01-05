@@ -17,8 +17,11 @@ public class SceneTransformDetector : SceneDetectorBase
         return bounds.Intersects(m_Bounds);
     }
 
-    void OnDrawGizmosSelected()
+#if UNITY_EDITOR
+    void OnDrawGizmos()
     {
-        m_Bounds.DrawBounds(Color.yellow);
+        Bounds b = new Bounds(transform.position, detectorSize);
+        b.DrawBounds(Color.yellow);
     }
+#endif
 }

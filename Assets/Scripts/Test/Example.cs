@@ -3,8 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
-public class TestSceneBlockObject : ISceneObject
+public class TestSceneObject : ISceneObject
 {
+    [SerializeField]
+    private Bounds m_Bounds;
+    [SerializeField]
+    private string m_ResPath;
+    [SerializeField]
+    private Vector3 m_Position;
+    [SerializeField]
+    private Vector3 m_Rotation;
+    [SerializeField]
+    private Vector3 m_Size;
+
+    private GameObject m_LoadedPrefab;
+
     public Bounds Bounds
     {
         get { return m_Bounds; }
@@ -16,65 +29,80 @@ public class TestSceneBlockObject : ISceneObject
         {
             Object.Destroy(m_LoadedPrefab);
             m_LoadedPrefab = null;
-        }
-        if (m_Obj)
-        {
-            Resources.UnloadAsset(m_Obj);
-            m_Obj = null;
+            TestResManager.UnLoad(m_ResPath);
         }
     }
 
     public bool OnShow(Transform parent)
     {
-        if (m_LoadedPrefab == null && m_Obj == null)
+        if (m_LoadedPrefab == null)
         {
-            m_Obj = Resources.Load<GameObject>(resPath);
-            m_LoadedPrefab = UnityEngine.Object.Instantiate<GameObject>(m_Obj);
+            var obj = TestResManager.Load(m_ResPath);
+            m_LoadedPrefab = UnityEngine.Object.Instantiate<GameObject>(obj);
             m_LoadedPrefab.transform.SetParent(parent);
-            m_LoadedPrefab.transform.position = position;
-            m_LoadedPrefab.transform.eulerAngles = rotation;
-            m_LoadedPrefab.transform.localScale = size;
+            m_LoadedPrefab.transform.position = m_Position;
+            m_LoadedPrefab.transform.eulerAngles = m_Rotation;
+            m_LoadedPrefab.transform.localScale = m_Size;
             return true;
         }
         return false;
     }
 
-    [SerializeField]
-    private Bounds m_Bounds;
+    public TestSceneObject(Bounds bounds, Vector3 position, Vector3 rotation, Vector3 size, string resPath)
+    {
+        m_Bounds = bounds;
+        m_Position = position;
+        m_Rotation = rotation;
+        m_Size = size;
+        m_ResPath = resPath;
+    }
 
-    public string resPath;
-    public Vector3 position;
-    public Vector3 rotation;
-    public Vector3 size;
 
-    private GameObject m_LoadedPrefab;
-    private GameObject m_Obj;
 }
 
 public class Example : MonoBehaviour
 {
-    public List<TestSceneBlockObject> loadObjects;
+    public List<TestSceneObject> loadObjects;
 
     public Bounds bounds;
 
-    private Vector3 areaSize;
-
     public int maxCreateCount;
 
-    //public 
+    public float maxRefreshTime;
+    public float maxDestroyTime;
 
-    private SceneObjectLoadController m_Manager;
+    public bool asyn;
+
+    public SceneDetectorBase detector;
+
+    private SceneObjectLoadController m_Controller;
 
     void Start()
     {
-        m_Manager = gameObject.GetComponent<SceneObjectLoadController>();
-        if (m_Manager == null)
-            m_Manager = gameObject.AddComponent<SceneObjectLoadController>();
-        //m_Manager.Init()
+        m_Controller = gameObject.GetComponent<SceneObjectLoadController>();
+        if (m_Controller == null)
+            m_Controller = gameObject.AddComponent<SceneObjectLoadController>();
+        m_Controller.Init(maxCreateCount, maxRefreshTime, maxDestroyTime, asyn, bounds.center, bounds.size, 5);
+
+        for (int i = 0; i < loadObjects.Count; i++)
+        {
+            m_Controller.AddSceneBlockObject(loadObjects[i]);
+        }
     }
     
     void Update()
     {
+        m_Controller.RefreshPosition(detector);
+    }
 
+    void OnDrawGizmosSelected()
+    {
+        if (Application.isPlaying)
+        {
+        }
+        else
+        {
+            bounds.DrawBounds(Color.green);
+        }
     }
 }

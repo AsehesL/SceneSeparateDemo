@@ -71,7 +71,7 @@ public class SceneObjectLoadController : MonoBehaviour
             return;
         SceneObject sbobj = new SceneObject(obj);
         m_QuadTree.Add(sbobj);
-        if (m_CurrentDetector.IsTrigger(sbobj.Bounds))
+        if (m_CurrentDetector != null && m_CurrentDetector.IsTrigger(sbobj.Bounds))
         {
             DoCreateInternal(sbobj);
         }
@@ -320,5 +320,11 @@ public class SceneObjectLoadController : MonoBehaviour
             }
         }
         m_IsCreating = false;
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (m_QuadTree != null)
+            m_QuadTree.DrawTree(0, 0.1f);
     }
 }

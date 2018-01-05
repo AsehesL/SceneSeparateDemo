@@ -169,4 +169,30 @@ public class QuadTreeNode<T> where T : ISceneObject
         }
         return result;
     }
+
+    public void DrawNode(float h, float deltaH)
+    {
+        if (m_ChildNodes != null)
+        {
+            for (int i = 0; i < m_ChildNodes.Length; i++)
+            {
+                var node = m_ChildNodes[i];
+                if (node != null)
+                    node.DrawNode(h + deltaH, deltaH);
+            }
+        }
+
+        DrawArea(h, 1, 1);
+    }
+
+    public void DrawArea(float H, float S, float V)
+    {
+        Color col = Color.HSVToRGB(H, S, V);
+        DrawArea(col);
+    }
+
+    public void DrawArea(Color color)
+    {
+        m_Bounds.DrawBounds(color);
+    }
 }

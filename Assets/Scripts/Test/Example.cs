@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
-public class TestSceneBlockObject : ISceneBlockObject
+public class TestSceneBlockObject : ISceneObject
 {
     public Bounds Bounds
     {
@@ -63,13 +63,13 @@ public class Example : MonoBehaviour
 
     //public 
 
-    private SceneBlockQuadTreeManager m_Manager;
+    private SceneObjectLoadController m_Manager;
 
     void Start()
     {
-        m_Manager = gameObject.GetComponent<SceneBlockQuadTreeManager>();
+        m_Manager = gameObject.GetComponent<SceneObjectLoadController>();
         if (m_Manager == null)
-            m_Manager = gameObject.AddComponent<SceneBlockQuadTreeManager>();
+            m_Manager = gameObject.AddComponent<SceneObjectLoadController>();
         //m_Manager.Init()
     }
     

@@ -5,19 +5,27 @@ using System.Collections.Generic;
 /// <summary>
 /// 场景区块四叉树节点
 /// </summary>
-public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
+public class QuadTreeNode<T> where T : ISceneObject
 {
-
+    /// <summary>
+    /// 节点包围盒
+    /// </summary>
     public Bounds Bounds
     {
         get { return m_Bounds; }
     }
 
+    /// <summary>
+    /// 节点当前深度
+    /// </summary>
     public int CurrentDepth
     {
         get { return m_CurrentDepth; }
     }
 
+    /// <summary>
+    /// 节点数据列表
+    /// </summary>
     public List<T> ObjectList
     {
         get { return m_ObjectList; }   
@@ -28,7 +36,7 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
     public bool HasBottomLeftChild { get { return m_ChildNodes[2] != null; } }
     public bool HasBottomRightChild { get { return m_ChildNodes[3] != null; } }
 
-    private SceneBlockQuadTreeNode<T>[] m_ChildNodes = new SceneBlockQuadTreeNode<T>[4] { null, null, null, null };
+    private QuadTreeNode<T>[] m_ChildNodes = new QuadTreeNode<T>[4] { null, null, null, null };
     
     private int m_CurrentDepth;
     
@@ -36,7 +44,7 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
 
     private List<T> m_ObjectList;
 
-    public SceneBlockQuadTreeNode(Bounds bounds, int depth)
+    public QuadTreeNode(Bounds bounds, int depth)
     {
         m_Bounds = bounds;
         m_CurrentDepth = depth;
@@ -67,13 +75,13 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
         return false;
     }
 
-    public SceneBlockQuadTreeNode<T> Insert(T obj, int depth, int maxDepth)
+    public QuadTreeNode<T> Insert(T obj, int depth, int maxDepth)
     {
         if (m_ObjectList.Contains(obj))
             return this;
         if (depth < maxDepth)
         {
-            SceneBlockQuadTreeNode<T> node = GetContainerNode(obj, depth);
+            QuadTreeNode<T> node = GetContainerNode(obj, depth);
             if (node != null)
                 return node.Insert(obj, depth + 1, maxDepth);
         }
@@ -90,7 +98,7 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
         return false;
     }
 
-    public void Trigger(Bounds bounds, TriggerHandle<T> handle)
+    public void Trigger(IDetector detector, TriggerHandle<T> handle)
     {
         if (handle == null)
             return;
@@ -99,51 +107,26 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
         {
             var node = m_ChildNodes[i];
             if (node != null)
-                node.Trigger(bounds, handle);
+                node.Trigger(detector, handle);
         }
 
-        if (m_Bounds.Intersects(bounds))
+        if (detector.IsTrigger(m_Bounds))
         {
             for (int i = 0; i < m_ObjectList.Count; i++)
             {
                 if (m_ObjectList[i] != null)
                 {
-                    if (m_ObjectList[i].Bounds.Intersects(bounds))
+                    if (detector.IsTrigger(m_ObjectList[i].Bounds))
                         handle(m_ObjectList[i]);
                 }
             }
         }
     }
 
-    public void Trigger(Camera camera, TriggerHandle<T> handle)
-    {
-        if (handle == null)
-            return;
-
-        for (int i = 0; i < m_ChildNodes.Length; i++)
-        {
-            var node = m_ChildNodes[i];
-            if (node != null)
-                node.Trigger(camera, handle);
-        }
-
-        if (!m_Bounds.IsBoundsOutOfCamera(camera))
-        {
-            for (int i = 0; i < m_ObjectList.Count; i++)
-            {
-                if (m_ObjectList[i] != null)
-                {
-                    if (!m_ObjectList[i].Bounds.IsBoundsOutOfCamera(camera))
-                        handle(m_ObjectList[i]);
-                }
-            }
-        }
-    }
-
-    private SceneBlockQuadTreeNode<T> GetContainerNode(T obj, int depth)
+    private QuadTreeNode<T> GetContainerNode(T obj, int depth)
     {
         Vector3 halfSize = new Vector3(m_Bounds.size.x / 2, m_Bounds.size.y, m_Bounds.size.z / 2);
-        SceneBlockQuadTreeNode<T> result = null;
+        QuadTreeNode<T> result = null;
         result = GetContainerNode(ref m_ChildNodes[0], depth, m_Bounds.center + new Vector3(-halfSize.x / 2, 0, -halfSize.z / 2),
             halfSize, obj);
         if (result != null)
@@ -167,15 +150,15 @@ public class SceneBlockQuadTreeNode<T> where T : ISceneBlockObject
         return null;
     }
 
-    private SceneBlockQuadTreeNode<T> GetContainerNode(ref SceneBlockQuadTreeNode<T> node, int depth, Vector3 centerPos, Vector3 size, T obj)
+    private QuadTreeNode<T> GetContainerNode(ref QuadTreeNode<T> node, int depth, Vector3 centerPos, Vector3 size, T obj)
     {
-        SceneBlockQuadTreeNode<T> result = null;
+        QuadTreeNode<T> result = null;
         if (node == null)
         {
             Bounds bounds = new Bounds(centerPos, size);
             if (bounds.IsBoundsContainsAnotherBounds(obj.Bounds))
             {
-                SceneBlockQuadTreeNode<T> newNode = new SceneBlockQuadTreeNode<T>(bounds, depth+1);
+                QuadTreeNode<T> newNode = new QuadTreeNode<T>(bounds, depth+1);
                 node = newNode;
                 result = node;
             }

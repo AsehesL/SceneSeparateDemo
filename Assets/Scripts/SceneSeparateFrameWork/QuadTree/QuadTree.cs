@@ -7,7 +7,7 @@ public delegate void TriggerHandle<T>(T trigger);
 /// <summary>
 /// 场景区块四叉树
 /// </summary>
-public class SceneBlockQuadTree<T> where T : ISceneBlockObject
+public class QuadTree<T> where T : ISceneObject
 {
     /// <summary>
     /// 八叉树包围盒
@@ -31,14 +31,14 @@ public class SceneBlockQuadTree<T> where T : ISceneBlockObject
     /// <summary>
     /// 根节点
     /// </summary>
-    private SceneBlockQuadTreeNode<T> m_Root;
+    private QuadTreeNode<T> m_Root;
     
     public int m_MaxDepth;
 
-    public SceneBlockQuadTree(Vector3 center, Vector3 size, int maxDepth)
+    public QuadTree(Vector3 center, Vector3 size, int maxDepth)
     {
         this.m_MaxDepth = maxDepth;
-        this.m_Root = new SceneBlockQuadTreeNode<T>(new Bounds(center, size), 0);
+        this.m_Root = new QuadTreeNode<T>(new Bounds(center, size), 0);
     }
 
     public void Add(T item)
@@ -62,21 +62,14 @@ public class SceneBlockQuadTree<T> where T : ISceneBlockObject
     }
 
 
-    public void Trigger(Bounds bounds, TriggerHandle<T> handle)
+    public void Trigger(IDetector detector, TriggerHandle<T> handle)
     {
         if (handle == null)
             return;
-        m_Root.Trigger(bounds, handle);
+        m_Root.Trigger(detector, handle);
     }
 
-    public void Trigger(Camera camera, TriggerHandle<T> handle)
-    {
-        if (handle == null)
-            return;
-        m_Root.Trigger(camera, handle);
-    }
-
-    public static implicit operator bool(SceneBlockQuadTree<T> tree)
+    public static implicit operator bool(QuadTree<T> tree)
     {
         return tree != null;
     }

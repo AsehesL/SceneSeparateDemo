@@ -21,49 +21,74 @@ public static class BoundsEx
     /// <param name="bounds"></param>
     /// <param name="camera"></param>
     /// <returns></returns>
-    public static bool IsBoundsOutOfCamera(this Bounds bounds, Camera camera)
+    public static bool IsBoundsInCamera(this Bounds bounds, Camera camera)
     {
+        
         Matrix4x4 matrix = camera.projectionMatrix*camera.worldToCameraMatrix;
+        
         Vector3 projPos =
             matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x/2, bounds.center.y + bounds.size.y/2,
                 bounds.center.z + bounds.size.z/2));
-        if (!IsPosOutOfCCV(projPos))
-            return false;
+        Vector3 max = projPos;
+        Vector3 min = projPos;
+
         projPos =
             matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
                 bounds.center.z + bounds.size.z / 2));
-        if (!IsPosOutOfCCV(projPos))
-            return false;
+        max = Vector3.Max(projPos, max);
+        min = Vector3.Min(projPos, min);
+
         projPos =
             matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
                 bounds.center.z + bounds.size.z / 2));
-        if (!IsPosOutOfCCV(projPos))
-            return false;
+        max = Vector3.Max(projPos, max);
+        min = Vector3.Min(projPos, min);
+
         projPos =
             matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
                 bounds.center.z + bounds.size.z / 2));
-        if (!IsPosOutOfCCV(projPos))
-            return false;
+        max = Vector3.Max(projPos, max);
+        min = Vector3.Min(projPos, min);
+
         projPos =
             matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
                 bounds.center.z - bounds.size.z / 2));
-        if (!IsPosOutOfCCV(projPos))
-            return false;
+        max = Vector3.Max(projPos, max);
+        min = Vector3.Min(projPos, min);
+
         projPos =
             matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
                 bounds.center.z - bounds.size.z / 2));
-        if (!IsPosOutOfCCV(projPos))
-            return false;
+        max = Vector3.Max(projPos, max);
+        min = Vector3.Min(projPos, min);
+
         projPos =
             matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
                 bounds.center.z - bounds.size.z / 2));
-        if (!IsPosOutOfCCV(projPos))
-            return false;
+        max = Vector3.Max(projPos, max);
+        min = Vector3.Min(projPos, min);
+
         projPos =
             matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
                 bounds.center.z - bounds.size.z / 2));
-        if (!IsPosOutOfCCV(projPos))
-            return false;
+        max = Vector3.Max(projPos, max);
+        min = Vector3.Min(projPos, min);
+
+        if (camera.orthographic)
+        {
+            if (max.x < -1 || min.x > 1) return false;
+            if (max.y < -1 || min.y > 1) return false;
+            if (max.z < -1 || min.z > 1) return false;
+        }
+        else
+        {
+            if ((max.z < 1 && max.x < -1) || (max.z >= 1 && max.x > 1) || (min.z < 1 && min.z > 1) ||
+                (min.z >= 1 && min.z < -1)) return false;
+            if ((max.z < 1 && max.y < -1) || (max.z >= 1 && max.y > 1) || (min.z < 1 && min.y > 1) ||
+                (min.z >= 1 && min.y < -1)) return false;
+            if (max.z < -1 || min.z > 1) return false;
+        }
+
         return true;
     }
 
@@ -75,15 +100,6 @@ public static class BoundsEx
     /// <returns></returns>
     public static bool IsBoundsContainsAnotherBounds(this Bounds bounds, Bounds compareTo)
     {
-        //if (!bounds.Contains(compareTo.center))
-        //    return false;
-        //if (bounds.size.x < compareTo.size.x)
-        //    return false;
-        //if (bounds.size.y < compareTo.size.y)
-        //    return false;
-        //if (bounds.size.z < compareTo.size.z)
-        //    return false;
-        //return true;
         if (!bounds.Contains(compareTo.center + new Vector3(-compareTo.size.x / 2, compareTo.size.y / 2, -compareTo.size.z / 2)))
             return false;
         if (!bounds.Contains(compareTo.center + new Vector3(compareTo.size.x / 2, compareTo.size.y / 2, -compareTo.size.z / 2)))
@@ -101,12 +117,5 @@ public static class BoundsEx
         if (!bounds.Contains(compareTo.center + new Vector3(-compareTo.size.x / 2, -compareTo.size.y / 2, compareTo.size.z / 2)))
             return false;
         return true;
-    }
-
-    private static bool IsPosOutOfCCV(Vector3 projPos)
-    {
-        if (projPos.x <= -1 || projPos.x >= 1 || projPos.y <= -1 || projPos.y >= 1 || projPos.z <= -1 || projPos.z >= 1)
-            return true;
-        return false;
     }
 }

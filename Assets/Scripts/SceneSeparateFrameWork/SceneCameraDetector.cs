@@ -17,6 +17,6 @@ public class SceneCameraDetector : SceneDetectorBase
     {
         if (m_Camera == null)
             return false;
-        return !bounds.IsBoundsOutOfCamera(m_Camera);
+        return bounds.IsBoundsInCamera(m_Camera);
     }
 }

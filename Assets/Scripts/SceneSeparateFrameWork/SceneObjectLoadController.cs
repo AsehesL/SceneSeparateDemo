@@ -40,7 +40,8 @@ public class SceneObjectLoadController : MonoBehaviour
     /// <summary>
     /// 待销毁物体列表
     /// </summary>
-    private List<SceneObject> m_PreDestroyObjectList;
+    //private List<SceneObject> m_PreDestroyObjectList;
+    private PriorityQueue<SceneObject> m_PreDestroyObjectQueue;
 
     private TriggerHandle<SceneObject> m_TriggerHandle;
 
@@ -73,7 +74,8 @@ public class SceneObjectLoadController : MonoBehaviour
             return;
         m_QuadTree = new QuadTree<SceneObject>(center, size, quadTreeDepth);
         m_LoadedObjectList = new List<SceneObject>();
-        m_PreDestroyObjectList = new List<SceneObject>();
+        //m_PreDestroyObjectList = new List<SceneObject>();
+        m_PreDestroyObjectQueue = new PriorityQueue<SceneObject>(new SceneObjectWeightComparer());
         m_TriggerHandle = new TriggerHandle<SceneObject>(this.TriggerHandle); 
 
         m_MaxCreateCount = maxCreateCount;
@@ -147,7 +149,8 @@ public class SceneObjectLoadController : MonoBehaviour
         }
         if (m_OldDestroyRefreshPosition != detector.Position)
         {
-            if (m_PreDestroyObjectList != null && m_PreDestroyObjectList.Count >= m_MaxCreateCount)
+            if(m_PreDestroyObjectQueue != null && m_PreDestroyObjectQueue.Count >= m_MaxCreateCount)
+            //if (m_PreDestroyObjectList != null && m_PreDestroyObjectList.Count >= m_MaxCreateCount)
             {
                 m_DestroyRefreshTime += Time.deltaTime;
                 if (m_DestroyRefreshTime > m_MaxDestroyTime)
@@ -176,7 +179,7 @@ public class SceneObjectLoadController : MonoBehaviour
         else if (data.Flag == SceneObject.CreateFlag.OutofBounds)//如果发生触发的物体已经被标记为超出区域，则从待删除列表移除该物体，并标记为新物体
         {
             data.Flag = SceneObject.CreateFlag.New;
-            if (m_PreDestroyObjectList.Remove(data))
+            //if (m_PreDestroyObjectList.Remove(data))
             {
                 m_LoadedObjectList.Add(data);
             }
@@ -212,8 +215,10 @@ public class SceneObjectLoadController : MonoBehaviour
             if (m_LoadedObjectList[i].Flag == SceneObject.CreateFlag.Old)//已加载物体标记仍然为Old，说明该物体没有进入触发区域，即该物体在区域外
             {
                 m_LoadedObjectList[i].Flag = SceneObject.CreateFlag.OutofBounds;
-                m_PreDestroyObjectList.Add(m_LoadedObjectList[i]);
+                //m_PreDestroyObjectList.Add(m_LoadedObjectList[i]);
+                m_PreDestroyObjectQueue.Push(m_LoadedObjectList[i]);
                 m_LoadedObjectList.RemoveAt(i);
+
             }
             else
             {
@@ -228,26 +233,35 @@ public class SceneObjectLoadController : MonoBehaviour
     /// </summary>
     void DestroyOutOfBoundsObjs()
     {
-        int i = 0;
-        while (i < m_PreDestroyObjectList.Count)
+        //int i = 0;
+        //while (i < m_PreDestroyObjectList.Count)
+        while(m_PreDestroyObjectQueue.Count>0)
         {
             //当待删除列表物体小于最小创建物体时跳出，确保创建的物体始终大于最小创建物体数
-            if (m_PreDestroyObjectList.Count <= m_MinCreateCount)
+            //if (m_PreDestroyObjectList.Count <= m_MinCreateCount)
+            if(m_PreDestroyObjectQueue.Count <= m_MinCreateCount)
             {
                 return;
             }
-            if (m_PreDestroyObjectList[i] == null)
-            {
-                m_PreDestroyObjectList.RemoveAt(i);
+            var obj = m_PreDestroyObjectQueue.Pop();
+            if (obj == null)
                 continue;
-            }
-            if (m_PreDestroyObjectList[i].Flag == SceneObject.CreateFlag.OutofBounds)//将标记超出区域的物体删除
+            if (obj.Flag == SceneObject.CreateFlag.OutofBounds)
             {
-                DestroyObject(m_PreDestroyObjectList[i], m_Asyn);
-                m_PreDestroyObjectList.RemoveAt(i);
-                continue;
+                DestroyObject(obj, m_Asyn);
             }
-            i++;
+            //if (m_PreDestroyObjectList[i] == null)
+            //{
+            //    m_PreDestroyObjectList.RemoveAt(i);
+            //    continue;
+            //}
+            //if (m_PreDestroyObjectList[i].Flag == SceneObject.CreateFlag.OutofBounds)//将标记超出区域的物体删除
+            //{
+            //    DestroyObject(m_PreDestroyObjectList[i], m_Asyn);
+            //    m_PreDestroyObjectList.RemoveAt(i);
+            //    continue;
+            //}
+            //i++;
         }
     }
 
@@ -393,6 +407,15 @@ public class SceneObjectLoadController : MonoBehaviour
             }
         }
         m_IsTaskRunning = false;
+    }
+
+    private class SceneObjectWeightComparer : IComparer<SceneObject>
+    {
+
+        public int Compare(SceneObject x, SceneObject y)
+        {
+            return (int) (y.Weight - x.Weight);
+        }
     }
 
 #if UNITY_EDITOR

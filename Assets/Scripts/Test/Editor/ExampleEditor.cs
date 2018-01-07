@@ -78,13 +78,18 @@ public class ExampleEditor : Editor
     {
         if (string.IsNullOrEmpty(resPath))
             return null;
-        Renderer renderer = transform.gameObject.GetComponent<MeshRenderer>();
-        if (renderer == null)
-            renderer = transform.gameObject.GetComponent<SkinnedMeshRenderer>();
-        if (renderer == null)
+        Renderer[] renderers = transform.gameObject.GetComponentsInChildren<MeshRenderer>();
+        if (renderers == null || renderers.Length == 0)
             return null;
-        Bounds bounds = renderer.bounds;
-        Vector3 size = bounds.size;
+        Vector3 min = renderers[0].bounds.min;
+        Vector3 max = renderers[0].bounds.max;
+        for (int i = 1; i < renderers.Length; i++)
+        {
+            min = Vector3.Min(renderers[i].bounds.min, min);
+            max = Vector3.Max(renderers[i].bounds.max, max);
+        }
+        Vector3 size = max - min;
+        Bounds bounds = new Bounds(min + size/2, size);
         if (size.x <= 0)
             size.x = 0.2f;
         if (size.y <= 0)
@@ -92,7 +97,12 @@ public class ExampleEditor : Editor
         if (size.z <= 0)
             size.z = 0.2f;
         bounds.size = size;
-        TestSceneObject obj = new TestSceneObject(bounds, transform.position, transform.eulerAngles, transform.localScale, resPath);
+        float weight = 1;
+        //示例代码未针对不同物体设置权重，仅将示例用的Tower设置高权重。实际使用中可以根据物体的优先级或物体的重要程度或物体内存中的占用情况来设置权重
+        if (resPath == "Prefabs/Tower")
+            weight = 4;
+        
+        TestSceneObject obj = new TestSceneObject(bounds, weight, transform.position, transform.eulerAngles, transform.localScale, resPath);
         return obj;
         
     }

@@ -53,6 +53,11 @@ public class SceneObject : ISceneObject
         get { return m_TargetObj.Bounds; }
     }
 
+    public float Weight
+    {
+        get { return m_TargetObj.Weight; }
+    }
+
     /// <summary>
     /// 被包装的实际用于动态加载和销毁的场景物体
     /// </summary>

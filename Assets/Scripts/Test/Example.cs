@@ -11,6 +11,8 @@ public class TestSceneObject : ISceneObject
     [SerializeField]
     private Bounds m_Bounds;
     [SerializeField]
+    private float m_Weight;
+    [SerializeField]
     private string m_ResPath;
     [SerializeField]
     private Vector3 m_Position;
@@ -20,6 +22,8 @@ public class TestSceneObject : ISceneObject
     private Vector3 m_Size;
 
     private GameObject m_LoadedPrefab;
+
+    public float Weight { get { return m_Weight; } }
 
     public Bounds Bounds
     {
@@ -51,8 +55,9 @@ public class TestSceneObject : ISceneObject
         return false;
     }
 
-    public TestSceneObject(Bounds bounds, Vector3 position, Vector3 rotation, Vector3 size, string resPath)
+    public TestSceneObject(Bounds bounds, float weight, Vector3 position, Vector3 rotation, Vector3 size, string resPath)
     {
+        m_Weight = weight;
         m_Bounds = bounds;
         m_Position = position;
         m_Rotation = rotation;

@@ -113,6 +113,20 @@ public class SceneObjectLoadController : MonoBehaviour
         Init(center, size, asyn, maxCreateCount, minCreateCount, 1, 5);
     }
 
+    void OnDestroy()
+    {
+        if (m_QuadTree)
+            m_QuadTree.Clear();
+        m_QuadTree = null;
+        if (m_ProcessTaskQueue != null)
+            m_ProcessTaskQueue.Clear();
+        if (m_LoadedObjectList != null)
+            m_LoadedObjectList.Clear();
+        m_ProcessTaskQueue = null;
+        m_LoadedObjectList = null;
+        m_TriggerHandle = null;
+    }
+
     /// <summary>
     /// 添加场景物体
     /// </summary>
@@ -439,7 +453,6 @@ public class SceneObjectLoadController : MonoBehaviour
     public int debug_DrawMinDepth = 0;
     public int debug_DrawMaxDepth = 5;
     public bool debug_DrawObj = true;
-    public bool debug_DrawDetector = true;
     void OnDrawGizmosSelected()
     {
         Color mindcolor = new Color32(0, 66, 255, 255);

@@ -89,6 +89,7 @@ public class Example : MonoBehaviour
             m_Controller = gameObject.AddComponent<SceneObjectLoadController>();
         m_Controller.Init(bounds.center, bounds.size, asyn);
 
+
         for (int i = 0; i < loadObjects.Count; i++)
         {
             m_Controller.AddSceneBlockObject(loadObjects[i]);

@@ -185,6 +185,7 @@ GameObject:
   - component: {fileID: 1316760609}
   - component: {fileID: 1316760608}
   - component: {fileID: 1316760607}
+  - component: {fileID: 1316760612}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -230,10 +231,10 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 40.8
   field of view: 60
   orthographic: 0
-  orthographic size: 5
+  orthographic size: 6.81
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -262,6 +263,17 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1316760612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1316760606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e230cb265321d1c419fae59beb4cabad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1356670513
 GameObject:
   m_ObjectHideFlags: 0
@@ -302,7 +314,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb1bebda2f5068d46b2720f7370dcdf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  desc: "\u6839\u636E\u6307\u5B9A\u5305\u56F4\u76D2\u52A0\u8F7D"
+  desc: "\u6839\u636E\u76F8\u673A\u88C1\u526A\u533A\u57DF\u52A0\u8F7D"
   loadObjects:
   - m_Bounds:
       m_Center: {x: 65.837456, y: 2.4920425, z: 21.243088}
@@ -2212,7 +2224,7 @@ MonoBehaviour:
     m_Center: {x: 50.193077, y: 4.1564345, z: 49.087357}
     m_Extent: {x: 50.561905, y: 4.28545, z: 50.494366}
   asyn: 1
-  detector: {fileID: 1397954995}
+  detector: {fileID: 1316760612}
 --- !u!1 &1397954988
 GameObject:
   m_ObjectHideFlags: 0
@@ -2226,7 +2238,6 @@ GameObject:
   - component: {fileID: 1397954991}
   - component: {fileID: 1397954990}
   - component: {fileID: 1397954989}
-  - component: {fileID: 1397954995}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Untagged
@@ -2332,18 +2343,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1397954995
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1397954988}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8149045ebb3b68d42a0ea5f2b00bd91f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  detectorSize: {x: 22, y: 2.58, z: 22}
 --- !u!1 &1834072339
 GameObject:
   m_ObjectHideFlags: 0

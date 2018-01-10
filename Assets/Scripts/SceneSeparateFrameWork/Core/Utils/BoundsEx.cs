@@ -23,63 +23,77 @@ public static class BoundsEx
     /// <returns></returns>
     public static bool IsBoundsInCamera(this Bounds bounds, Camera camera)
     {
-        
+
         Matrix4x4 matrix = camera.projectionMatrix*camera.worldToCameraMatrix;
-        
+
         Vector3 projPos =
-            matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x/2, bounds.center.y + bounds.size.y/2,
-                bounds.center.z + bounds.size.z/2));
+            GetProjPos(new Vector4(bounds.center.x + bounds.size.x/2, bounds.center.y + bounds.size.y/2,
+                bounds.center.z + bounds.size.z/2,1), matrix, camera.orthographic);
         Vector3 max = projPos;
         Vector3 min = projPos;
 
         projPos =
-            matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
-                bounds.center.z + bounds.size.z / 2));
+            GetProjPos(new Vector4(bounds.center.x - bounds.size.x/2, bounds.center.y + bounds.size.y/2,
+                bounds.center.z + bounds.size.z/2,1), matrix, camera.orthographic);
         max = Vector3.Max(projPos, max);
         min = Vector3.Min(projPos, min);
 
         projPos =
-            matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
-                bounds.center.z + bounds.size.z / 2));
+            GetProjPos(new Vector4(bounds.center.x + bounds.size.x/2, bounds.center.y - bounds.size.y/2,
+                bounds.center.z + bounds.size.z/2, 1), matrix, camera.orthographic);
         max = Vector3.Max(projPos, max);
         min = Vector3.Min(projPos, min);
 
         projPos =
-            matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
-                bounds.center.z + bounds.size.z / 2));
+            GetProjPos(new Vector4(bounds.center.x - bounds.size.x/2, bounds.center.y - bounds.size.y/2,
+                bounds.center.z + bounds.size.z/2, 1), matrix, camera.orthographic);
         max = Vector3.Max(projPos, max);
         min = Vector3.Min(projPos, min);
 
         projPos =
-            matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
-                bounds.center.z - bounds.size.z / 2));
+            GetProjPos(new Vector4(bounds.center.x + bounds.size.x/2, bounds.center.y + bounds.size.y/2,
+                bounds.center.z - bounds.size.z/2, 1), matrix, camera.orthographic);
         max = Vector3.Max(projPos, max);
         min = Vector3.Min(projPos, min);
 
         projPos =
-            matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
-                bounds.center.z - bounds.size.z / 2));
+            GetProjPos(new Vector4(bounds.center.x - bounds.size.x/2, bounds.center.y + bounds.size.y/2,
+                bounds.center.z - bounds.size.z/2, 1), matrix, camera.orthographic);
         max = Vector3.Max(projPos, max);
         min = Vector3.Min(projPos, min);
 
         projPos =
-            matrix.MultiplyPoint(new Vector3(bounds.center.x + bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
-                bounds.center.z - bounds.size.z / 2));
+            GetProjPos(new Vector4(bounds.center.x + bounds.size.x/2, bounds.center.y - bounds.size.y/2,
+                bounds.center.z - bounds.size.z/2, 1), matrix, camera.orthographic);
         max = Vector3.Max(projPos, max);
         min = Vector3.Min(projPos, min);
 
         projPos =
-            matrix.MultiplyPoint(new Vector3(bounds.center.x - bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
-                bounds.center.z - bounds.size.z / 2));
+            GetProjPos(new Vector4(bounds.center.x - bounds.size.x/2, bounds.center.y - bounds.size.y/2,
+                bounds.center.z - bounds.size.z/2, 1), matrix, camera.orthographic);
         max = Vector3.Max(projPos, max);
         min = Vector3.Min(projPos, min);
 
-     
-            if (max.x < -1 || min.x > 1) return false;
-            if (max.y < -1 || min.y > 1) return false;
-            if (max.z < -1 || min.z > 1) return false;
+
+        if (max.x < -1 || min.x > 1) return false;
+        if (max.y < -1 || min.y > 1) return false;
+        if (max.z < -1 || min.z > 1) return false;
 
         return true;
+    }
+
+    private static Vector3 GetProjPos(Vector4 pos, Matrix4x4 projection, bool ortho)
+    {
+        pos = projection * pos;
+        if (ortho)
+        {
+            return new Vector3(pos.x/pos.w, pos.y/pos.w, pos.z/pos.w);
+        }
+        else
+        {
+            float sign = -Mathf.Sign(pos.w);
+            return sign*new Vector3(pos.x/pos.w, pos.y/pos.w, pos.z/pos.w);
+        }
     }
 
     /// <summary>

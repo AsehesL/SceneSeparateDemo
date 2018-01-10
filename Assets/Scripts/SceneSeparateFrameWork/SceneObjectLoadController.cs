@@ -78,8 +78,8 @@ public class SceneObjectLoadController : MonoBehaviour
         m_PreDestroyObjectQueue = new PriorityQueue<SceneObject>(new SceneObjectWeightComparer());
         m_TriggerHandle = new TriggerHandle<SceneObject>(this.TriggerHandle); 
 
-        m_MaxCreateCount = maxCreateCount;
-        m_MinCreateCount = minCreateCount;
+        m_MaxCreateCount = Mathf.Max(0, maxCreateCount);
+        m_MinCreateCount = Mathf.Clamp(minCreateCount, 0, m_MaxCreateCount);
         m_MaxRefreshTime = maxRefreshTime;
         m_MaxDestroyTime = maxDestroyTime;
         m_Asyn = asyn;
@@ -98,6 +98,19 @@ public class SceneObjectLoadController : MonoBehaviour
     public void Init(Vector3 center, Vector3 size, bool asyn)
     {
         Init(center, size, asyn, 25, 15, 1, 5);
+    }
+
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <param name="center">场景区域中心</param>
+    /// <param name="size">场景区域大小</param>
+    /// <param name="asyn">是否异步</param>
+    /// <param name="maxCreateCount">更新区域时间间隔</param>
+    /// <param name="minCreateCount">检查销毁时间间隔</param>
+    public void Init(Vector3 center, Vector3 size, bool asyn, int maxCreateCount, int minCreateCount)
+    {
+        Init(center, size, asyn, maxCreateCount, minCreateCount, 1, 5);
     }
 
     /// <summary>
@@ -149,7 +162,7 @@ public class SceneObjectLoadController : MonoBehaviour
         }
         if (m_OldDestroyRefreshPosition != detector.Position)
         {
-            if(m_PreDestroyObjectQueue != null && m_PreDestroyObjectQueue.Count >= m_MaxCreateCount)
+            if(m_PreDestroyObjectQueue != null && m_PreDestroyObjectQueue.Count >= m_MaxCreateCount && m_PreDestroyObjectQueue.Count > m_MinCreateCount)
             //if (m_PreDestroyObjectList != null && m_PreDestroyObjectList.Count >= m_MaxCreateCount)
             {
                 m_DestroyRefreshTime += Time.deltaTime;
@@ -216,7 +229,14 @@ public class SceneObjectLoadController : MonoBehaviour
             {
                 m_LoadedObjectList[i].Flag = SceneObject.CreateFlag.OutofBounds;
                 //m_PreDestroyObjectList.Add(m_LoadedObjectList[i]);
-                m_PreDestroyObjectQueue.Push(m_LoadedObjectList[i]);
+                if (m_MinCreateCount == 0)//如果最小创建数为0直接删除
+                {
+                    DestroyObject(m_LoadedObjectList[i], m_Asyn);
+                }
+                else
+                {
+                    m_PreDestroyObjectQueue.Push(m_LoadedObjectList[i]);//加入待删除队列
+                }
                 m_LoadedObjectList.RemoveAt(i);
 
             }
@@ -235,14 +255,11 @@ public class SceneObjectLoadController : MonoBehaviour
     {
         //int i = 0;
         //while (i < m_PreDestroyObjectList.Count)
-        while(m_PreDestroyObjectQueue.Count>0)
+        while(m_PreDestroyObjectQueue.Count>m_MinCreateCount)
         {
             //当待删除列表物体小于最小创建物体时跳出，确保创建的物体始终大于最小创建物体数
             //if (m_PreDestroyObjectList.Count <= m_MinCreateCount)
-            if(m_PreDestroyObjectQueue.Count <= m_MinCreateCount)
-            {
-                return;
-            }
+            
             var obj = m_PreDestroyObjectQueue.Pop();
             if (obj == null)
                 continue;

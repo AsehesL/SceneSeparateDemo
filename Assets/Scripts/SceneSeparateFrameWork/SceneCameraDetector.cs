@@ -19,4 +19,13 @@ public class SceneCameraDetector : SceneDetectorBase
             return false;
         return bounds.IsBoundsInCamera(m_Camera);
     }
+
+#if UNITY_EDITOR
+    void OnDrawGizmos()
+    {
+        Camera camera = gameObject.GetComponent<Camera>();
+        if (camera)
+            GizmosEx.DrawViewFrustum(camera, Color.yellow);
+    }
+#endif
 }

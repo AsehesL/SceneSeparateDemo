@@ -108,10 +108,10 @@ public class QuadTree<T> where T : ISceneObject
     }
 
 #if UNITY_EDITOR
-    public void DrawTree(float h, float deltaH)
+    public void DrawTree(Color treeMinDepthColor, Color treeMaxDepthColor, Color objColor, Color hitObjColor, int drawMinDepth, int drawMaxDepth, bool drawObj)
     {
         if (m_Root != null)
-            m_Root.DrawNode(h, deltaH);
+            m_Root.DrawNode(treeMinDepthColor, treeMaxDepthColor, objColor, hitObjColor, drawMinDepth, drawMaxDepth, drawObj, m_MaxDepth);
     }
 #endif
 }

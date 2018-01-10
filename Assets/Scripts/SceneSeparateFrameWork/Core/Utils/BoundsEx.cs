@@ -74,20 +74,10 @@ public static class BoundsEx
         max = Vector3.Max(projPos, max);
         min = Vector3.Min(projPos, min);
 
-        if (camera.orthographic)
-        {
+     
             if (max.x < -1 || min.x > 1) return false;
             if (max.y < -1 || min.y > 1) return false;
             if (max.z < -1 || min.z > 1) return false;
-        }
-        else
-        {
-            if ((max.z < 1 && max.x < -1) || (max.z >= 1 && max.x > 1) || (min.z < 1 && min.z > 1) ||
-                (min.z >= 1 && min.z < -1)) return false;
-            if ((max.z < 1 && max.y < -1) || (max.z >= 1 && max.y > 1) || (min.z < 1 && min.y > 1) ||
-                (min.z >= 1 && min.y < -1)) return false;
-            if (max.z < -1 || min.z > 1) return false;
-        }
 
         return true;
     }

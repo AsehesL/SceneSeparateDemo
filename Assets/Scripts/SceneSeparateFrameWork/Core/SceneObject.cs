@@ -88,8 +88,13 @@ public class SceneObject : ISceneObject
     }
 
 #if UNITY_EDITOR
-    public void DrawArea(Color color)
+    public void DrawArea(Color color, Color hitColor)
     {
+        if (Flag == CreateFlag.New || Flag == CreateFlag.Old)
+        {
+            m_TargetObj.Bounds.DrawBounds(hitColor);
+        }
+        else 
         m_TargetObj.Bounds.DrawBounds(color);
     }
 #endif

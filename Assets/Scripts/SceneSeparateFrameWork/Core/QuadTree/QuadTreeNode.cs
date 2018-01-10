@@ -171,7 +171,7 @@ public class QuadTreeNode<T> where T : ISceneObject
     }
 
 #if UNITY_EDITOR
-    public void DrawNode(float h, float deltaH)
+    public void DrawNode(Color treeMinDepthColor, Color treeMaxDepthColor, Color objColor, Color hitObjColor, int drawMinDepth, int drawMaxDepth, bool drawObj, int maxDepth)
     {
         if (m_ChildNodes != null)
         {
@@ -179,30 +179,49 @@ public class QuadTreeNode<T> where T : ISceneObject
             {
                 var node = m_ChildNodes[i];
                 if (node != null)
-                    node.DrawNode(h + deltaH, deltaH);
+                    node.DrawNode(treeMinDepthColor, treeMaxDepthColor, objColor, hitObjColor, drawMinDepth, drawMaxDepth, drawObj, maxDepth);
             }
         }
 
-        DrawArea(h, 1, 1);
-    }
-
-    public void DrawArea(float H, float S, float V)
-    {
-        Color col = Color.HSVToRGB(H, S, V);
-        DrawArea(col);
-    }
-
-    public void DrawArea(Color color)
-    {
-        m_Bounds.DrawBounds(color);
-        for (int i = 0; i < m_ObjectList.Count; i++)
+        if (m_CurrentDepth >= drawMinDepth && m_CurrentDepth <= drawMaxDepth)
         {
-            if (m_ObjectList[i] != null && m_ObjectList[i] is SceneObject)
+            float d = ((float) m_CurrentDepth)/maxDepth;
+            Color color = Color.Lerp(treeMinDepthColor, treeMaxDepthColor, d);
+
+            m_Bounds.DrawBounds(color);
+        }
+        if (drawObj)
+        {
+            for (int i = 0; i < m_ObjectList.Count; i++)
             {
-                var scenobj = m_ObjectList[i] as SceneObject;
-                scenobj.DrawArea(Color.black);
+                if (m_ObjectList[i] != null && m_ObjectList[i] is SceneObject)
+                {
+                    var scenobj = m_ObjectList[i] as SceneObject;
+                    scenobj.DrawArea(objColor, hitObjColor);
+                }
             }
         }
+
+        //DrawArea(h, 1, 1);
     }
+
+    //public void DrawArea(float H, float S, float V)
+    //{
+    //    Color col = Color.HSVToRGB(H, S, V);
+    //    DrawArea(col);
+    //}
+
+    //public void DrawArea(Color color)
+    //{
+    //    m_Bounds.DrawBounds(color);
+    //    for (int i = 0; i < m_ObjectList.Count; i++)
+    //    {
+    //        if (m_ObjectList[i] != null && m_ObjectList[i] is SceneObject)
+    //        {
+    //            var scenobj = m_ObjectList[i] as SceneObject;
+    //            scenobj.DrawArea(Color.black);
+    //        }
+    //    }
+    //}
 #endif
 }

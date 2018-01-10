@@ -436,11 +436,18 @@ public class SceneObjectLoadController : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-
+    public int debug_DrawMinDepth = 0;
+    public int debug_DrawMaxDepth = 5;
+    public bool debug_DrawObj = true;
+    public bool debug_DrawDetector = true;
     void OnDrawGizmosSelected()
     {
+        Color mindcolor = new Color32(0, 66, 255, 255);
+        Color maxdcolor = new Color32(133, 165, 255, 255);
+        Color objcolor = new Color32(0, 210, 255, 255);
+        Color hitcolor = new Color32(255, 216, 0, 255);
         if (m_QuadTree != null)
-            m_QuadTree.DrawTree(0, 0.1f);
+            m_QuadTree.DrawTree(mindcolor, maxdcolor, objcolor, hitcolor, debug_DrawMinDepth, debug_DrawMaxDepth, debug_DrawObj);
     }
 #endif
 }

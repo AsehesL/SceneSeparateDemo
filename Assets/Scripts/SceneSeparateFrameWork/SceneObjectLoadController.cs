@@ -143,7 +143,7 @@ public class SceneObjectLoadController : MonoBehaviour
         SceneObject sbobj = new SceneObject(obj);
         m_QuadTree.Add(sbobj);
         //如果当前触发器存在，直接物体是否可触发，如果可触发，则创建物体
-        if (m_CurrentDetector != null && m_CurrentDetector.IsTrigger(sbobj.Bounds))
+        if (m_CurrentDetector != null && m_CurrentDetector.IsDetected(sbobj.Bounds))
         {
             DoCreateInternal(sbobj);
         }

@@ -3,7 +3,11 @@ using System.Collections;
 
 public static class GizmosEx 
 {
-
+    /// <summary>
+    /// 绘制视锥体
+    /// </summary>
+    /// <param name="camera"></param>
+    /// <param name="color"></param>
     public static void DrawViewFrustum(Camera camera, Color color)
     {
         Vector3 p1 = camera.projectionMatrix.inverse.MultiplyPoint(new Vector3(-1, -1, -1));

@@ -9,6 +9,6 @@ public abstract class SceneDetectorBase : MonoBehaviour, IDetector
     }
     
 
-    public abstract bool IsTrigger(Bounds bounds);
+    public abstract bool IsDetected(Bounds bounds);
     
 }

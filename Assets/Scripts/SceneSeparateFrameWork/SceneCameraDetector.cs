@@ -13,7 +13,7 @@ public class SceneCameraDetector : SceneDetectorBase
         m_Camera = gameObject.GetComponent<Camera>();
     }
 
-    public override bool IsTrigger(Bounds bounds)
+    public override bool IsDetected(Bounds bounds)
     {
         if (m_Camera == null)
             return false;

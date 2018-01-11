@@ -110,13 +110,13 @@ public class QuadTreeNode<T> where T : ISceneObject
                 node.Trigger(detector, handle);
         }
 
-        if (detector.IsTrigger(m_Bounds))
+        if (detector.IsDetected(m_Bounds))
         {
             for (int i = 0; i < m_ObjectList.Count; i++)
             {
                 if (m_ObjectList[i] != null)
                 {
-                    if (detector.IsTrigger(m_ObjectList[i].Bounds))
+                    if (detector.IsDetected(m_ObjectList[i].Bounds))
                         handle(m_ObjectList[i]);
                 }
             }

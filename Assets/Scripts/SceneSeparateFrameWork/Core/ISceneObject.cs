@@ -12,7 +12,7 @@ public interface ISceneObject
     Bounds Bounds { get; }
 
     /// <summary>
-    /// 权重
+    /// 权重（离开区域的物体根据权重，优先删除权重小的物体）
     /// </summary>
     float Weight { get; }
 

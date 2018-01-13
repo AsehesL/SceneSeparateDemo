@@ -13,7 +13,7 @@ public class SceneObjectLoadController : MonoBehaviour
     /// <summary>
     /// 当前场景资源四叉树
     /// </summary>
-    private QuadTree<SceneObject> m_QuadTree;
+    private SceneSeparateTree<SceneObject> m_QuadTree;
 
     /// <summary>
     /// 刷新时间
@@ -68,11 +68,11 @@ public class SceneObjectLoadController : MonoBehaviour
     /// <param name="maxRefreshTime">更新区域时间间隔</param>
     /// <param name="maxDestroyTime">检查销毁时间间隔</param>
     /// <param name="quadTreeDepth">四叉树深度</param>
-    public void Init(Vector3 center, Vector3 size, bool asyn, int maxCreateCount, int minCreateCount, float maxRefreshTime, float maxDestroyTime, int quadTreeDepth = 5)
+    public void Init(Vector3 center, Vector3 size, bool asyn, int maxCreateCount, int minCreateCount, float maxRefreshTime, float maxDestroyTime, SceneSeparateTreeType treeType , int quadTreeDepth = 5)
     {
         if (m_IsInitialized)
             return;
-        m_QuadTree = new QuadTree<SceneObject>(center, size, quadTreeDepth);
+        m_QuadTree = new SceneSeparateTree<SceneObject>(treeType, center, size, quadTreeDepth);
         m_LoadedObjectList = new List<SceneObject>();
         //m_PreDestroyObjectList = new List<SceneObject>();
         m_PreDestroyObjectQueue = new PriorityQueue<SceneObject>(new SceneObjectWeightComparer());
@@ -95,9 +95,9 @@ public class SceneObjectLoadController : MonoBehaviour
     /// <param name="center">场景区域中心</param>
     /// <param name="size">场景区域大小</param>
     /// <param name="asyn">是否异步</param>
-    public void Init(Vector3 center, Vector3 size, bool asyn)
+    public void Init(Vector3 center, Vector3 size, bool asyn, SceneSeparateTreeType treeType)
     {
-        Init(center, size, asyn, 25, 15, 1, 5);
+        Init(center, size, asyn, 25, 15, 1, 5, treeType);
     }
 
     /// <summary>
@@ -108,9 +108,9 @@ public class SceneObjectLoadController : MonoBehaviour
     /// <param name="asyn">是否异步</param>
     /// <param name="maxCreateCount">更新区域时间间隔</param>
     /// <param name="minCreateCount">检查销毁时间间隔</param>
-    public void Init(Vector3 center, Vector3 size, bool asyn, int maxCreateCount, int minCreateCount)
+    public void Init(Vector3 center, Vector3 size, bool asyn, int maxCreateCount, int minCreateCount, SceneSeparateTreeType treeType)
     {
-        Init(center, size, asyn, maxCreateCount, minCreateCount, 1, 5);
+        Init(center, size, asyn, maxCreateCount, minCreateCount, 1, 5, treeType);
     }
 
     void OnDestroy()

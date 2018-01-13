@@ -1,100 +1,83 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
-using System;
 
 public delegate void TriggerHandle<T>(T trigger);
-/// <summary>
-/// 场景区块四叉树
-/// </summary>
-public class QuadTree<T> where T : ISceneObject
+
+public enum SceneSeparateTreeType
 {
-    /// <summary>
-    /// 四叉树包围盒
-    /// </summary>
+    OcTree,
+    QuadTree,
+}
+
+public class SceneSeparateTree<T> where T : ISceneObject
+{
+
     public Bounds Bounds
     {
         get
         {
-            if (m_Root!=null)
+            if (m_Root != null)
                 return m_Root.Bounds;
             return default(Bounds);
         }
     }
 
-    /// <summary>
-    /// 四叉树最大深度
-    /// </summary>
     public int MaxDepth
     {
         get { return m_MaxDepth; }
     }
 
+    public SceneSeparateTreeType CurrentTreeType { get { return m_TreeType; } }
 
     /// <summary>
     /// 根节点
     /// </summary>
-    private QuadTreeNode<T> m_Root;
-    
+    private SceneSeparateTreeNode<T> m_Root;
+
     /// <summary>
     /// 最大深度
     /// </summary>
-    public int m_MaxDepth;
+    private int m_MaxDepth;
+
+    private SceneSeparateTreeType m_TreeType;
 
     /// <summary>
     /// 构造函数
     /// </summary>
-    /// <param name="center">四叉树中心</param>
-    /// <param name="size">四叉树区域大小</param>
-    /// <param name="maxDepth">四叉树最大深度</param>
-    public QuadTree(Vector3 center, Vector3 size, int maxDepth)
+    /// <param name="treeType">树类型</param>
+    /// <param name="center">树中心</param>
+    /// <param name="size">树区域大小</param>
+    /// <param name="maxDepth">树最大深度</param>
+    public SceneSeparateTree(SceneSeparateTreeType treeType, Vector3 center, Vector3 size, int maxDepth)
     {
+        this.m_TreeType = treeType;
         this.m_MaxDepth = maxDepth;
-        this.m_Root = new QuadTreeNode<T>(new Bounds(center, size), 0);
+        if (treeType == SceneSeparateTreeType.QuadTree)
+            this.m_Root = new SceneSeparateTreeNode<T>(new Bounds(center, size), 0, 4);
+        else
+            this.m_Root = new SceneSeparateTreeNode<T>(new Bounds(center, size), 0, 8);
     }
 
-    /// <summary>
-    /// 添加数据
-    /// </summary>
-    /// <param name="item"></param>
     public void Add(T item)
     {
         m_Root.Insert(item, 0, m_MaxDepth);
     }
 
-    /// <summary>
-    /// 清除
-    /// </summary>
     public void Clear()
     {
         m_Root.Clear();
     }
 
-    /// <summary>
-    /// 是否包含
-    /// </summary>
-    /// <param name="item"></param>
-    /// <returns></returns>
     public bool Contains(T item)
     {
         return m_Root.Contains(item);
     }
 
-    /// <summary>
-    /// 移除数据
-    /// </summary>
-    /// <param name="item"></param>
-    /// <returns></returns>
     public bool Remove(T item)
     {
         return m_Root.Remove(item);
     }
 
-    /// <summary>
-    /// 触发判断
-    /// </summary>
-    /// <param name="detector">触发器</param>
-    /// <param name="handle">触发处理回调</param>
     public void Trigger(IDetector detector, TriggerHandle<T> handle)
     {
         if (handle == null)
@@ -102,7 +85,7 @@ public class QuadTree<T> where T : ISceneObject
         m_Root.Trigger(detector, handle);
     }
 
-    public static implicit operator bool(QuadTree<T> tree)
+    public static implicit operator bool(SceneSeparateTree<T> tree)
     {
         return tree != null;
     }

@@ -2,11 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 
-/// <summary>
-/// 场景区块四叉树节点
-/// </summary>
-public class QuadTreeNode<T> where T : ISceneObject
+public class SceneSeparateTreeNode<T> where T : ISceneObject
 {
+
     /// <summary>
     /// 节点包围盒
     /// </summary>
@@ -26,29 +24,32 @@ public class QuadTreeNode<T> where T : ISceneObject
     /// <summary>
     /// 节点数据列表
     /// </summary>
-    public List<T> ObjectList
+    public System.Collections.Generic.List<T> ObjectList
     {
-        get { return m_ObjectList; }   
+        get { return m_ObjectList; }
     }
 
-    public bool HasTopLeftChild { get { return m_ChildNodes[0] != null; } }
-    public bool HasTopRightChild { get { return m_ChildNodes[1] != null; } }
-    public bool HasBottomLeftChild { get { return m_ChildNodes[2] != null; } }
-    public bool HasBottomRightChild { get { return m_ChildNodes[3] != null; } }
-
-    private QuadTreeNode<T>[] m_ChildNodes = new QuadTreeNode<T>[4] { null, null, null, null };
-    
     private int m_CurrentDepth;
-    
+
     private Bounds m_Bounds;
+
+    private Vector3 m_HalfSize;
 
     private List<T> m_ObjectList;
 
-    public QuadTreeNode(Bounds bounds, int depth)
+    protected SceneSeparateTreeNode<T>[] m_ChildNodes;
+
+    public SceneSeparateTreeNode(Bounds bounds, int depth, int childCount)
     {
         m_Bounds = bounds;
         m_CurrentDepth = depth;
         m_ObjectList = new List<T>();
+        m_ChildNodes = new SceneSeparateTreeNode<T>[childCount];
+
+        if (childCount == 8)
+            m_HalfSize = new Vector3(m_Bounds.size.x/2, m_Bounds.size.y/2, m_Bounds.size.z/2);
+        else
+            m_HalfSize = new Vector3(m_Bounds.size.x/2, m_Bounds.size.y, m_Bounds.size.z/2);
     }
 
     public void Clear()
@@ -75,13 +76,13 @@ public class QuadTreeNode<T> where T : ISceneObject
         return false;
     }
 
-    public QuadTreeNode<T> Insert(T obj, int depth, int maxDepth)
+    public SceneSeparateTreeNode<T> Insert(T obj, int depth, int maxDepth)
     {
         if (m_ObjectList.Contains(obj))
             return this;
         if (depth < maxDepth)
         {
-            QuadTreeNode<T> node = GetContainerNode(obj, depth);
+            SceneSeparateTreeNode<T> node = GetContainerNode(obj, depth);
             if (node != null)
                 return node.Insert(obj, depth + 1, maxDepth);
         }
@@ -123,42 +124,40 @@ public class QuadTreeNode<T> where T : ISceneObject
         }
     }
 
-    private QuadTreeNode<T> GetContainerNode(T obj, int depth)
+    protected SceneSeparateTreeNode<T> GetContainerNode(T obj, int depth)
     {
-        Vector3 halfSize = new Vector3(m_Bounds.size.x / 2, m_Bounds.size.y, m_Bounds.size.z / 2);
-        QuadTreeNode<T> result = null;
-        result = GetContainerNode(ref m_ChildNodes[0], depth, m_Bounds.center + new Vector3(-halfSize.x / 2, 0, -halfSize.z / 2),
-            halfSize, obj);
-        if (result != null)
-            return result;
+        SceneSeparateTreeNode<T> result = null;
+        int ix = -1;
+        int iz = -1;
+        int iy = m_ChildNodes.Length == 4 ? 0 : -1;
 
-        result = GetContainerNode(ref m_ChildNodes[1], depth, m_Bounds.center + new Vector3(-halfSize.x / 2, 0, halfSize.z / 2),
-            halfSize, obj);
-        if (result != null)
-            return result;
-
-        result = GetContainerNode(ref m_ChildNodes[2], depth, m_Bounds.center + new Vector3(halfSize.x / 2, 0, halfSize.z / 2),
-            halfSize, obj);
-        if (result != null)
-            return result;
-
-        result = GetContainerNode(ref m_ChildNodes[3], depth, m_Bounds.center + new Vector3(halfSize.x / 2, 0, -halfSize.z / 2),
-            halfSize, obj);
-        if (result != null)
-            return result;
-
+        int nodeIndex = 0;
+        for (int i = ix; i <= 1; i += 2)
+        {
+            for (int j = iz; j <= 1; j += 2)
+            {
+                for (int k = iy; k <= 1; k += 2)
+                {
+                    result = CreateNode(ref m_ChildNodes[nodeIndex], depth, m_Bounds.center + new Vector3(i* m_HalfSize.x / 2, k*m_HalfSize.y/2, j* m_HalfSize.z / 2),
+            m_HalfSize, obj);
+                    if (result != null)
+                        return result;
+                    nodeIndex += 1;
+                }
+            }
+        }
         return null;
     }
 
-    private QuadTreeNode<T> GetContainerNode(ref QuadTreeNode<T> node, int depth, Vector3 centerPos, Vector3 size, T obj)
+    protected SceneSeparateTreeNode<T> CreateNode(ref SceneSeparateTreeNode<T> node, int depth, Vector3 centerPos, Vector3 size, T obj) 
     {
-        QuadTreeNode<T> result = null;
+        SceneSeparateTreeNode<T> result = null;
         if (node == null)
         {
             Bounds bounds = new Bounds(centerPos, size);
             if (bounds.IsBoundsContainsAnotherBounds(obj.Bounds))
             {
-                QuadTreeNode<T> newNode = new QuadTreeNode<T>(bounds, depth+1);
+                SceneSeparateTreeNode<T> newNode = new SceneSeparateTreeNode<T>(bounds, depth + 1, m_ChildNodes.Length);
                 node = newNode;
                 result = node;
             }
@@ -185,7 +184,7 @@ public class QuadTreeNode<T> where T : ISceneObject
 
         if (m_CurrentDepth >= drawMinDepth && m_CurrentDepth <= drawMaxDepth)
         {
-            float d = ((float) m_CurrentDepth)/maxDepth;
+            float d = ((float)m_CurrentDepth) / maxDepth;
             Color color = Color.Lerp(treeMinDepthColor, treeMaxDepthColor, d);
 
             m_Bounds.DrawBounds(color);
@@ -202,26 +201,7 @@ public class QuadTreeNode<T> where T : ISceneObject
             }
         }
 
-        //DrawArea(h, 1, 1);
     }
 
-    //public void DrawArea(float H, float S, float V)
-    //{
-    //    Color col = Color.HSVToRGB(H, S, V);
-    //    DrawArea(col);
-    //}
-
-    //public void DrawArea(Color color)
-    //{
-    //    m_Bounds.DrawBounds(color);
-    //    for (int i = 0; i < m_ObjectList.Count; i++)
-    //    {
-    //        if (m_ObjectList[i] != null && m_ObjectList[i] is SceneObject)
-    //        {
-    //            var scenobj = m_ObjectList[i] as SceneObject;
-    //            scenobj.DrawArea(Color.black);
-    //        }
-    //    }
-    //}
 #endif
 }

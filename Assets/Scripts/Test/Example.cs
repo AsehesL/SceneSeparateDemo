@@ -87,7 +87,7 @@ public class Example : MonoBehaviour
         m_Controller = gameObject.GetComponent<SceneObjectLoadController>();
         if (m_Controller == null)
             m_Controller = gameObject.AddComponent<SceneObjectLoadController>();
-        m_Controller.Init(bounds.center, bounds.size, asyn);
+        m_Controller.Init(bounds.center, bounds.size, asyn, SceneSeparateTreeType.QuadTree);
 
 
         for (int i = 0; i < loadObjects.Count; i++)

@@ -97,10 +97,7 @@ public class ExampleEditor : Editor
         if (size.z <= 0)
             size.z = 0.2f;
         bounds.size = size;
-        float weight = 1;
-        //示例代码未针对不同物体设置权重，仅将示例用的Tower设置高权重。实际使用中可以根据物体的优先级或物体的重要程度或物体内存中的占用情况来设置权重
-        if (resPath == "Prefabs/Tower")
-            weight = 4;
+        
         
         TestSceneObject obj = new TestSceneObject(bounds, transform.position, transform.eulerAngles, transform.localScale, resPath);
         return obj;

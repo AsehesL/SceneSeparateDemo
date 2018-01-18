@@ -102,7 +102,7 @@ public class ExampleEditor : Editor
         if (resPath == "Prefabs/Tower")
             weight = 4;
         
-        TestSceneObject obj = new TestSceneObject(bounds, weight, transform.position, transform.eulerAngles, transform.localScale, resPath);
+        TestSceneObject obj = new TestSceneObject(bounds, transform.position, transform.eulerAngles, transform.localScale, resPath);
         return obj;
         
     }

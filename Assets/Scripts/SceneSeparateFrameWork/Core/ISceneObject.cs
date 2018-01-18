@@ -12,11 +12,6 @@ public interface ISceneObject
     Bounds Bounds { get; }
 
     /// <summary>
-    /// 权重（离开区域的物体根据权重，优先删除权重小的物体）
-    /// </summary>
-    float Weight { get; }
-
-    /// <summary>
     /// 该物体进入显示区域时调用（在这里处理物体的加载或显示）
     /// </summary>
     /// <param name="parent"></param>

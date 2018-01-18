@@ -55,7 +55,8 @@ public class SceneObject : ISceneObject
 
     public float Weight
     {
-        get { return m_TargetObj.Weight; }
+        get { return m_Weight; }
+        set { m_Weight = value; }
     }
 
     /// <summary>
@@ -72,13 +73,17 @@ public class SceneObject : ISceneObject
 
     private ISceneObject m_TargetObj;
 
+    private float m_Weight;
+
     public SceneObject(ISceneObject obj)
     {
+        m_Weight = 0;
         m_TargetObj = obj;
     }
 
     public void OnHide()
     {
+        Weight = 0;
         m_TargetObj.OnHide();
     }
 

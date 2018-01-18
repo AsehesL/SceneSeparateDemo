@@ -40,8 +40,8 @@ public class SceneObjectLoadController : MonoBehaviour
     /// <summary>
     /// 待销毁物体列表
     /// </summary>
-    private Queue<SceneObject> m_PreDestroyObjectQueue;
-    //private PriorityQueue<SceneObject> m_PreDestroyObjectQueue;
+    //private Queue<SceneObject> m_PreDestroyObjectQueue;
+    private PriorityQueue<SceneObject> m_PreDestroyObjectQueue;
 
     private TriggerHandle<SceneObject> m_TriggerHandle;
 
@@ -74,8 +74,8 @@ public class SceneObjectLoadController : MonoBehaviour
             return;
         m_QuadTree = new SceneSeparateTree<SceneObject>(treeType, center, size, quadTreeDepth);
         m_LoadedObjectList = new List<SceneObject>();
-        m_PreDestroyObjectQueue = new Queue<SceneObject>();
-        //m_PreDestroyObjectQueue = new PriorityQueue<SceneObject>(new SceneObjectWeightComparer());
+        //m_PreDestroyObjectQueue = new Queue<SceneObject>();
+        m_PreDestroyObjectQueue = new PriorityQueue<SceneObject>(new SceneObjectWeightComparer());
         m_TriggerHandle = new TriggerHandle<SceneObject>(this.TriggerHandle); 
 
         m_MaxCreateCount = Mathf.Max(0, maxCreateCount);
@@ -201,6 +201,7 @@ public class SceneObjectLoadController : MonoBehaviour
             return;
         if (data.Flag == SceneObject.CreateFlag.Old) //如果发生触发的物体已经被创建则标记为新物体，以确保不会被删掉
         {
+            data.Weight ++;
             data.Flag = SceneObject.CreateFlag.New;
         }
         else if (data.Flag == SceneObject.CreateFlag.OutofBounds)//如果发生触发的物体已经被标记为超出区域，则从待删除列表移除该物体，并标记为新物体
@@ -246,8 +247,8 @@ public class SceneObjectLoadController : MonoBehaviour
                 }
                 else
                 {
-                    m_PreDestroyObjectQueue.Enqueue(m_LoadedObjectList[i]);
-                    //m_PreDestroyObjectQueue.Push(m_LoadedObjectList[i]);//加入待删除队列
+                    //m_PreDestroyObjectQueue.Enqueue(m_LoadedObjectList[i]);
+                    m_PreDestroyObjectQueue.Push(m_LoadedObjectList[i]);//加入待删除队列
                 }
                 m_LoadedObjectList.RemoveAt(i);
 
@@ -268,8 +269,8 @@ public class SceneObjectLoadController : MonoBehaviour
         while(m_PreDestroyObjectQueue.Count>m_MinCreateCount)
         {
 
-            var obj = m_PreDestroyObjectQueue.Dequeue();
-            //var obj = m_PreDestroyObjectQueue.Pop();
+            //var obj = m_PreDestroyObjectQueue.Dequeue();
+            var obj = m_PreDestroyObjectQueue.Pop();
             if (obj == null)
                 continue;
             if (obj.Flag == SceneObject.CreateFlag.OutofBounds)

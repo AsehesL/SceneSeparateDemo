@@ -40,8 +40,8 @@ public class SceneObjectLoadController : MonoBehaviour
     /// <summary>
     /// 待销毁物体列表
     /// </summary>
-    //private List<SceneObject> m_PreDestroyObjectList;
-    private PriorityQueue<SceneObject> m_PreDestroyObjectQueue;
+    private Queue<SceneObject> m_PreDestroyObjectQueue;
+    //private PriorityQueue<SceneObject> m_PreDestroyObjectQueue;
 
     private TriggerHandle<SceneObject> m_TriggerHandle;
 
@@ -74,8 +74,8 @@ public class SceneObjectLoadController : MonoBehaviour
             return;
         m_QuadTree = new SceneSeparateTree<SceneObject>(treeType, center, size, quadTreeDepth);
         m_LoadedObjectList = new List<SceneObject>();
-        //m_PreDestroyObjectList = new List<SceneObject>();
-        m_PreDestroyObjectQueue = new PriorityQueue<SceneObject>(new SceneObjectWeightComparer());
+        m_PreDestroyObjectQueue = new Queue<SceneObject>();
+        //m_PreDestroyObjectQueue = new PriorityQueue<SceneObject>(new SceneObjectWeightComparer());
         m_TriggerHandle = new TriggerHandle<SceneObject>(this.TriggerHandle); 
 
         m_MaxCreateCount = Mathf.Max(0, maxCreateCount);
@@ -224,9 +224,6 @@ public class SceneObjectLoadController : MonoBehaviour
         m_LoadedObjectList.Add(data);
         //创建物体
         CreateObject(data, m_Asyn);
-        //data.Create(transform);
-        //if (OnSceneBlockObjectCreate != null)
-        //    OnSceneBlockObjectCreate.Invoke(data.targetObj);
     }
 
     /// <summary>
@@ -249,7 +246,8 @@ public class SceneObjectLoadController : MonoBehaviour
                 }
                 else
                 {
-                    m_PreDestroyObjectQueue.Push(m_LoadedObjectList[i]);//加入待删除队列
+                    m_PreDestroyObjectQueue.Enqueue(m_LoadedObjectList[i]);
+                    //m_PreDestroyObjectQueue.Push(m_LoadedObjectList[i]);//加入待删除队列
                 }
                 m_LoadedObjectList.RemoveAt(i);
 
@@ -267,32 +265,17 @@ public class SceneObjectLoadController : MonoBehaviour
     /// </summary>
     void DestroyOutOfBoundsObjs()
     {
-        //int i = 0;
-        //while (i < m_PreDestroyObjectList.Count)
         while(m_PreDestroyObjectQueue.Count>m_MinCreateCount)
         {
-            //当待删除列表物体小于最小创建物体时跳出，确保创建的物体始终大于最小创建物体数
-            //if (m_PreDestroyObjectList.Count <= m_MinCreateCount)
-            
-            var obj = m_PreDestroyObjectQueue.Pop();
+
+            var obj = m_PreDestroyObjectQueue.Dequeue();
+            //var obj = m_PreDestroyObjectQueue.Pop();
             if (obj == null)
                 continue;
             if (obj.Flag == SceneObject.CreateFlag.OutofBounds)
             {
                 DestroyObject(obj, m_Asyn);
             }
-            //if (m_PreDestroyObjectList[i] == null)
-            //{
-            //    m_PreDestroyObjectList.RemoveAt(i);
-            //    continue;
-            //}
-            //if (m_PreDestroyObjectList[i].Flag == SceneObject.CreateFlag.OutofBounds)//将标记超出区域的物体删除
-            //{
-            //    DestroyObject(m_PreDestroyObjectList[i], m_Asyn);
-            //    m_PreDestroyObjectList.RemoveAt(i);
-            //    continue;
-            //}
-            //i++;
         }
     }
 
@@ -445,7 +428,11 @@ public class SceneObjectLoadController : MonoBehaviour
 
         public int Compare(SceneObject x, SceneObject y)
         {
-            return (int) (y.Weight - x.Weight);
+            if (y.Weight < x.Weight)
+                return 1;
+            else if (y.Weight == x.Weight)
+                return 0;
+            return -1;
         }
     }
 

@@ -6,16 +6,6 @@ using UnityEditor;
 [CustomEditor(typeof(SceneObjectLoadController))]
 public class SceneObjectLoadControllerEditor : Editor {
 
-#if UNITY_EDITOR
-    public Color debug_treeMinDepthColor;
-    public Color debug_treeMaxDepthColor;
-    public Color debug_ObjColor;
-    public Color debug_hitObjColor;
-    public int debug_DrawMinDepth;
-    public int debug_DrawMaxDepth;
-    public bool debug_DrawObj;
-#endif
-
     private SceneObjectLoadController m_Target;
 
     void OnEnable()

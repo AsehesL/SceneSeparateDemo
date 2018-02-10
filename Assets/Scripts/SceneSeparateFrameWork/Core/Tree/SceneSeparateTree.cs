@@ -9,7 +9,7 @@ public enum SceneSeparateTreeType
     QuadTree,
 }
 
-public class SceneSeparateTree<T> where T : ISceneObject
+public class SceneSeparateTree<T> where T : ISceneObject, ISOLinkedListNode
 {
 
     public Bounds Bounds
@@ -73,9 +73,9 @@ public class SceneSeparateTree<T> where T : ISceneObject
         return m_Root.Contains(item);
     }
 
-    public bool Remove(T item)
+    public void Remove(T item)
     {
-        return m_Root.Remove(item);
+         m_Root.Remove(item);
     }
 
     public void Trigger(IDetector detector, TriggerHandle<T> handle)

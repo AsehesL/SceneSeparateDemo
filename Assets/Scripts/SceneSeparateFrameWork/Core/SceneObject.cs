@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// 场景物件（用来包装实际用于动态加载的物体）
 /// </summary>
-public class SceneObject : ISceneObject
+public class SceneObject : ISceneObject, ISOLinkedListNode
 {
     /// <summary>
     /// 场景物件创建标记
@@ -75,10 +76,22 @@ public class SceneObject : ISceneObject
 
     private float m_Weight;
 
+    private System.Object m_Node;
+
     public SceneObject(ISceneObject obj)
     {
         m_Weight = 0;
         m_TargetObj = obj;
+    }
+
+    public LinkedListNode<T> GetLinkedListNode<T>() where T : ISceneObject
+    {
+        return (LinkedListNode<T>)m_Node;
+    }
+
+    public void SetLinkedListNode<T>(LinkedListNode<T> node)
+    {
+        m_Node = node;
     }
 
     public void OnHide()

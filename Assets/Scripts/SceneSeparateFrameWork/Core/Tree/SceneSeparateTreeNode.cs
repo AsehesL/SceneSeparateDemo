@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class SceneSeparateTreeNode<T> where T : ISceneObject
+public class SceneSeparateTreeNode<T> where T : ISceneObject, ISOLinkedListNode
 {
 
     /// <summary>
@@ -24,7 +24,7 @@ public class SceneSeparateTreeNode<T> where T : ISceneObject
     /// <summary>
     /// 节点数据列表
     /// </summary>
-    public System.Collections.Generic.List<T> ObjectList
+    public LinkedList<T> ObjectList
     {
         get { return m_ObjectList; }
     }
@@ -35,7 +35,7 @@ public class SceneSeparateTreeNode<T> where T : ISceneObject
 
     private Vector3 m_HalfSize;
 
-    private List<T> m_ObjectList;
+    private LinkedList<T> m_ObjectList;
 
     protected SceneSeparateTreeNode<T>[] m_ChildNodes;
 
@@ -43,7 +43,7 @@ public class SceneSeparateTreeNode<T> where T : ISceneObject
     {
         m_Bounds = bounds;
         m_CurrentDepth = depth;
-        m_ObjectList = new List<T>();
+        m_ObjectList = new LinkedList<T>();
         m_ChildNodes = new SceneSeparateTreeNode<T>[childCount];
 
         if (childCount == 8)
@@ -86,17 +86,18 @@ public class SceneSeparateTreeNode<T> where T : ISceneObject
             if (node != null)
                 return node.Insert(obj, depth + 1, maxDepth);
         }
-        m_ObjectList.Add(obj);
+        var n = m_ObjectList.AddFirst(obj);
+        obj.SetLinkedListNode(n);
         return this;
     }
 
-    public bool Remove(T obj)
+    public void Remove(T obj)
     {
-        if (m_ObjectList.Remove(obj))
-        {
-            return true;
-        }
-        return false;
+        m_ObjectList.Remove(obj.GetLinkedListNode<T>());
+        //{
+        //    return true;
+        //}
+        //return false;
     }
 
     public void Trigger(IDetector detector, TriggerHandle<T> handle)
@@ -113,14 +114,21 @@ public class SceneSeparateTreeNode<T> where T : ISceneObject
 
         if (detector.IsDetected(m_Bounds))
         {
-            for (int i = 0; i < m_ObjectList.Count; i++)
+            var node = m_ObjectList.First;
+            while (node != null)
             {
-                if (m_ObjectList[i] != null)
-                {
-                    if (detector.IsDetected(m_ObjectList[i].Bounds))
-                        handle(m_ObjectList[i]);
-                }
+                if (detector.IsDetected(node.Value.Bounds))
+                    handle(node.Value);
+                node = node.Next;
             }
+            //for (int i = 0; i < m_ObjectList.Count; i++)
+            //{
+            //    if (m_ObjectList[i] != null)
+            //    {
+            //        if (detector.IsDetected(m_ObjectList[i].Bounds))
+            //            handle(m_ObjectList[i]);
+            //    }
+            //}
         }
     }
 
@@ -191,14 +199,22 @@ public class SceneSeparateTreeNode<T> where T : ISceneObject
         }
         if (drawObj)
         {
-            for (int i = 0; i < m_ObjectList.Count; i++)
+            var node = m_ObjectList.First;
+            while (node != null)
             {
-                if (m_ObjectList[i] != null && m_ObjectList[i] is SceneObject)
-                {
-                    var scenobj = m_ObjectList[i] as SceneObject;
-                    scenobj.DrawArea(objColor, hitObjColor);
-                }
+                var sceneobj = node.Value as SceneObject;
+                if (sceneobj != null)
+                    sceneobj.DrawArea(objColor, hitObjColor);
+                node = node.Next;
             }
+            //for (int i = 0; i < m_ObjectList.Count; i++)
+            //{
+            //    if (m_ObjectList[i] != null && m_ObjectList[i] is SceneObject)
+            //    {
+            //        var scenobj = m_ObjectList[i] as SceneObject;
+            //        scenobj.DrawArea(objColor, hitObjColor);
+            //    }
+            //}
         }
 
     }

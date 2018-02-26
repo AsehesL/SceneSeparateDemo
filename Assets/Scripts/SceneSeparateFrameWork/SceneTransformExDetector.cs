@@ -38,10 +38,14 @@ public class SceneTransformExDetector : SceneDetectorBase
             xex = -leftExtDis;
         else if (movedir.x > Mathf.Epsilon)
             xex = rightExtDis;
+        else
+            xex = 0;
         if (movedir.z < -Mathf.Epsilon)
             zex = -bottomExtDis;
         else if (movedir.z > Mathf.Epsilon)
             zex = topExtDis;
+        else
+            zex = 0;
         m_PosOffset = new Vector3(xex*0.5f, 0, zex*0.5f);
         m_SizeEx = new Vector3(Mathf.Abs(xex), 0, Mathf.Abs(zex));
     }

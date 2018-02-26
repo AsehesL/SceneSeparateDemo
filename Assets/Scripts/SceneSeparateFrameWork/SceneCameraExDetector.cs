@@ -39,11 +39,11 @@ public class SceneCameraExDetector : SceneDetectorBase
     {
         Vector3 movedir = -transform.worldToLocalMatrix.MultiplyPoint(m_Position);
         m_Position = transform.position;
-
-        m_LeftEx = movedir.x < 0 ? horizontalExtDis : 0;
-        m_RightEx = movedir.x > 0 ? horizontalExtDis : 0;
-        m_UpEx = movedir.y > 0 ? topExtDis : 0;
-        m_DownEx = movedir.y < 0 ? bottomExtDis : 0;
+            
+        m_LeftEx = movedir.x < -Mathf.Epsilon ? -horizontalExtDis : 0;
+        m_RightEx = movedir.x > Mathf.Epsilon ? horizontalExtDis : 0;
+        m_UpEx = movedir.y > Mathf.Epsilon ? topExtDis : 0;
+        m_DownEx = movedir.y < -Mathf.Epsilon ? -bottomExtDis : 0;
     }
 
     public override bool IsDetected(Bounds bounds)

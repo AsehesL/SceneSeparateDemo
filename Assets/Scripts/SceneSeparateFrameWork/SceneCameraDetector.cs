@@ -7,7 +7,7 @@ using System.Collections;
 public class SceneCameraDetector : SceneDetectorBase
 {
     private Camera m_Camera;
-    
+
     void Start()
     {
         m_Camera = gameObject.GetComponent<Camera>();

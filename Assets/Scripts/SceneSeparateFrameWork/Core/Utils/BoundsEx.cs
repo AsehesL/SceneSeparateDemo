@@ -65,6 +65,50 @@ public static class BoundsEx
         return true;
     }
 
+    public static bool IsBoundsInCameraEx(this Bounds bounds, Camera camera, float leftex, float rightex, float downex, float upex)
+    {
+
+        Matrix4x4 matrix = camera.projectionMatrix * camera.worldToCameraMatrix;
+
+        int code =
+            ComputeOutCodeEx(new Vector4(bounds.center.x + bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
+                bounds.center.z + bounds.size.z / 2, 1), matrix, leftex, rightex, downex, upex);
+
+
+        code &=
+            ComputeOutCodeEx(new Vector4(bounds.center.x - bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
+                bounds.center.z + bounds.size.z / 2, 1), matrix, leftex, rightex, downex, upex);
+
+        code &=
+            ComputeOutCodeEx(new Vector4(bounds.center.x + bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
+                bounds.center.z + bounds.size.z / 2, 1), matrix, leftex, rightex, downex, upex);
+
+        code &=
+            ComputeOutCodeEx(new Vector4(bounds.center.x - bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
+                bounds.center.z + bounds.size.z / 2, 1), matrix, leftex, rightex, downex, upex);
+
+        code &=
+            ComputeOutCodeEx(new Vector4(bounds.center.x + bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
+                bounds.center.z - bounds.size.z / 2, 1), matrix, leftex, rightex, downex, upex);
+
+        code &=
+            ComputeOutCodeEx(new Vector4(bounds.center.x - bounds.size.x / 2, bounds.center.y + bounds.size.y / 2,
+                bounds.center.z - bounds.size.z / 2, 1), matrix, leftex, rightex, downex, upex);
+
+        code &=
+            ComputeOutCodeEx(new Vector4(bounds.center.x + bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
+                bounds.center.z - bounds.size.z / 2, 1), matrix, leftex, rightex, downex, upex);
+
+        code &=
+            ComputeOutCodeEx(new Vector4(bounds.center.x - bounds.size.x / 2, bounds.center.y - bounds.size.y / 2,
+                bounds.center.z - bounds.size.z / 2, 1), matrix, leftex, rightex, downex, upex);
+
+
+        if (code != 0) return false;
+
+        return true;
+    }
+
     private static int ComputeOutCode(Vector4 pos, Matrix4x4 projection)
     {
         pos = projection*pos;
@@ -73,6 +117,19 @@ public static class BoundsEx
         if (pos.x > pos.w) code |= 0x02;
         if (pos.y < -pos.w) code |= 0x04;
         if (pos.y > pos.w) code |= 0x08;
+        if (pos.z < -pos.w) code |= 0x10;
+        if (pos.z > pos.w) code |= 0x20;
+        return code;
+    }
+
+    private static int ComputeOutCodeEx(Vector4 pos, Matrix4x4 projection, float leftex, float rightex, float downex, float upex)
+    {
+        pos = projection * pos;
+        int code = 0;
+        if (pos.x < (-1+leftex)*pos.w) code |= 0x01;
+        if (pos.x > (1+rightex)*pos.w) code |= 0x02;
+        if (pos.y < (-1+downex)*pos.w) code |= 0x04;
+        if (pos.y > (1+upex)*pos.w) code |= 0x08;
         if (pos.z < -pos.w) code |= 0x10;
         if (pos.z > pos.w) code |= 0x20;
         return code;

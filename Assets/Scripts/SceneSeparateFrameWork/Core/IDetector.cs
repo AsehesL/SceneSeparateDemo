@@ -14,6 +14,14 @@ public interface IDetector
     bool IsDetected(Bounds bounds);
 
     /// <summary>
+    /// 计算八叉树包围盒的碰撞域码
+    /// </summary>
+    /// <param name="bounds"></param>
+    /// <param name="treeType"></param>
+    /// <returns></returns>
+    int DetectedCode(Bounds bounds, SceneSeparateTreeType treeType);
+
+    /// <summary>
     /// 触发器位置
     /// </summary>
     Vector3 Position { get; }

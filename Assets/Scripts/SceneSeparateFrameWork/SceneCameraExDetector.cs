@@ -4,7 +4,7 @@ using System.Collections;
 /// <summary>
 /// 该触发器根据相机裁剪区域触发，且根据相机运动趋势改变裁剪区域
 /// </summary>
-public class SceneCameraExDetector : SceneDetectorBase
+public class SceneCameraExDetector : SceneCameraDetector
 {
     #region 裁剪区域扩展趋势参数
     /// <summary>
@@ -20,8 +20,7 @@ public class SceneCameraExDetector : SceneDetectorBase
     /// </summary>
     public float bottomExtDis;
     #endregion
-
-    private Camera m_Camera;
+    
     private Vector3 m_Position;
 
     private float m_LeftEx;
@@ -33,13 +32,14 @@ public class SceneCameraExDetector : SceneDetectorBase
     {
         m_Camera = gameObject.GetComponent<Camera>();
         m_Position = transform.position;
+        //m_Codes = new int[27];
     }
 
     void Update()
     {
         Vector3 movedir = -transform.worldToLocalMatrix.MultiplyPoint(m_Position);
         m_Position = transform.position;
-            
+
         m_LeftEx = movedir.x < -Mathf.Epsilon ? -horizontalExtDis : 0;
         m_RightEx = movedir.x > Mathf.Epsilon ? horizontalExtDis : 0;
         m_UpEx = movedir.y > Mathf.Epsilon ? topExtDis : 0;
@@ -50,8 +50,13 @@ public class SceneCameraExDetector : SceneDetectorBase
     {
         if (m_Camera == null)
             return false;
-        
+
         return bounds.IsBoundsInCameraEx(m_Camera, m_LeftEx, m_RightEx, m_DownEx, m_UpEx);
+    }
+
+    protected override int CalculateCullCode(Vector4 position, Matrix4x4 matrix)
+    {
+        return MatrixEx.ComputeOutCodeEx(position, matrix, m_LeftEx, m_RightEx, m_DownEx, m_UpEx);
     }
 
 #if UNITY_EDITOR

@@ -4,9 +4,8 @@ using System.Collections;
 /// <summary>
 /// 该触发器根据Transform的包围盒区域触发-且根据Transform运动趋势扩展包围盒
 /// </summary>
-public class SceneTransformExDetector : SceneDetectorBase
+public class SceneTransformExDetector : SceneTransformDetector
 {
-    public Vector3 detectorSize;
 
     #region 包围盒扩展趋势参数
 
@@ -17,8 +16,6 @@ public class SceneTransformExDetector : SceneDetectorBase
     #endregion
 
     private Vector3 m_Position;
-
-    private Bounds m_Bounds;
 
     private Vector3 m_PosOffset;
     private Vector3 m_SizeEx;
@@ -50,11 +47,10 @@ public class SceneTransformExDetector : SceneDetectorBase
         m_SizeEx = new Vector3(Mathf.Abs(xex), 0, Mathf.Abs(zex));
     }
 
-    public override bool IsDetected(Bounds bounds)
+    protected override void RefreshBounds()
     {
         m_Bounds.center = Position + m_PosOffset;
         m_Bounds.size = detectorSize + m_SizeEx;
-        return bounds.Intersects(m_Bounds);
     }
 
 #if UNITY_EDITOR

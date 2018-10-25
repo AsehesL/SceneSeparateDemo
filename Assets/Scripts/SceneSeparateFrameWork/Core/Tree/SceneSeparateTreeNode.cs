@@ -100,19 +100,22 @@ public class SceneSeparateTreeNode<T> where T : ISceneObject, ISOLinkedListNode
         //return false;
     }
 
-    public void Trigger(IDetector detector, TriggerHandle<T> handle)
+    public void Trigger(IDetector detector, SceneSeparateTreeType treeType, TriggerHandle<T> handle)
     {
         if (handle == null)
             return;
 
+        int code = detector.DetectedCode(m_Bounds, treeType);
         for (int i = 0; i < m_ChildNodes.Length; i++)
         {
             var node = m_ChildNodes[i];
-            if (node != null)
-                node.Trigger(detector, handle);
+            if (node != null && (code & (1 << i)) != 0)
+            {
+                node.Trigger(detector, treeType, handle);
+            }
         }
 
-        if (detector.IsDetected(m_Bounds))
+        //if (detector.IsDetected(m_Bounds))
         {
             var node = m_ObjectList.First;
             while (node != null)

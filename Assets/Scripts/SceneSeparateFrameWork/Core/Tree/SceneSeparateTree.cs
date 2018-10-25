@@ -82,7 +82,9 @@ public class SceneSeparateTree<T> where T : ISceneObject, ISOLinkedListNode
     {
         if (handle == null)
             return;
-        m_Root.Trigger(detector, handle);
+        if (detector.IsDetected(m_Root.Bounds) == false)
+            return;
+        m_Root.Trigger(detector, m_TreeType, handle);
     }
 
     public static implicit operator bool(SceneSeparateTree<T> tree)

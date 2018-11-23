@@ -102,13 +102,17 @@ public class SceneCameraDetector : SceneDetectorBase
     private int CalculateOcTreeBoundsCullCode(int code, int index, int mask)
     {
         int c = m_Codes[index];
-        c &= m_Codes[index + 3];
-        c &= m_Codes[index + 9];
-        c &= m_Codes[index + 12];
         c &= m_Codes[index + 1];
+        c &= m_Codes[index + 2];
+        c &= m_Codes[index + 3];
         c &= m_Codes[index + 4];
-        c &= m_Codes[index + 13];
+        c &= m_Codes[index + 5];
+        c &= m_Codes[index + 9];
         c &= m_Codes[index + 10];
+        c &= m_Codes[index + 11];
+        c &= m_Codes[index + 12];
+        c &= m_Codes[index + 13];
+        c &= m_Codes[index + 14];
 
         if (c == 0)
             code |= mask;
@@ -118,9 +122,13 @@ public class SceneCameraDetector : SceneDetectorBase
     private int CalculateQuadTreeBoundsCullCode(int code, int index, int mask)
     {
         int c = m_Codes[index];
+        c &= m_Codes[index + 1];
         c &= m_Codes[index + 2];
+        c &= m_Codes[index + 3];
         c &= m_Codes[index + 6];
+        c &= m_Codes[index + 7];
         c &= m_Codes[index + 8];
+        c &= m_Codes[index + 9];
 
         if (c == 0)
             code |= mask;

@@ -21,6 +21,8 @@ public interface IDetector
     /// <returns></returns>
     int DetectedCode(Bounds bounds, SceneSeparateTreeType treeType);
 
+	int DetecedCode(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ, SceneSeparateTreeType treeType);
+
     /// <summary>
     /// 触发器位置
     /// </summary>

@@ -29,7 +29,34 @@ public class SceneTransformDetector : SceneDetectorBase
         return code;
     }
 
-    protected static int CalculateOcTreeBoundsCode(Bounds detectBounds, Bounds targetBounds)
+	public override int DetecedCode(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ, SceneSeparateTreeType treeType)
+	{
+		RefreshBounds();
+		int code = 0;
+		if (treeType == SceneSeparateTreeType.QuadTree)
+		{
+			float minx = m_Bounds.min.x;
+			float minz = m_Bounds.min.z;
+			float maxx = m_Bounds.max.x;
+			float maxz = m_Bounds.max.z;
+			if (minx <= centerX && minz <= centerZ)
+				code |= 1;
+			if (maxx >= centerX && minz <= centerZ)
+				code |= 2;
+			if (minx <= centerX && maxz >= centerZ)
+				code |= 4;
+			if (maxx >= centerX && maxz >= centerZ)
+				code |= 8;
+		}
+		else
+		{
+
+		}
+
+		return code;
+	}
+
+	protected static int CalculateOcTreeBoundsCode(Bounds detectBounds, Bounds targetBounds)
     {
         if (detectBounds.max.x < targetBounds.min.x || detectBounds.min.x > targetBounds.max.x)
             return 0;

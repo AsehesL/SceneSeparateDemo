@@ -94,7 +94,12 @@ public class SceneCameraDetector : SceneDetectorBase
         return code;
     }
 
-    protected virtual int CalculateCullCode(Vector4 position, Matrix4x4 matrix)
+	public override int DetecedCode(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ, SceneSeparateTreeType treeType)
+	{
+		throw new System.NotImplementedException();
+	}
+
+	protected virtual int CalculateCullCode(Vector4 position, Matrix4x4 matrix)
     {
         return MatrixEx.ComputeOutCode(position, matrix);
     }

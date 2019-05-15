@@ -6,6 +6,11 @@ using System.Collections;
 /// </summary>
 public interface IDetector
 {
+	/// <summary>
+	/// 是否使用相机裁剪检测
+	/// </summary>
+	bool UseCameraCulling { get; }
+
     /// <summary>
     /// 是否检测成功
     /// </summary>
@@ -13,18 +18,25 @@ public interface IDetector
     /// <returns></returns>
     bool IsDetected(Bounds bounds);
 
-    /// <summary>
-    /// 计算八叉树包围盒的碰撞域码
-    /// </summary>
-    /// <param name="bounds"></param>
-    /// <param name="treeType"></param>
-    /// <returns></returns>
-    int DetectedCode(Bounds bounds, SceneSeparateTreeType treeType);
+	/// <summary>
+	/// 计算某坐标与检测器的碰撞掩码
+	/// ps：如果UseCameraCulling为True，则计算的是坐标的裁剪掩码
+	/// 否则按照检测器碰撞的象限返回code：
+	/// 如果ignoreY为True，则对应四个象限的碰撞掩码：
+	/// |2|8|
+	/// |1|4|
+	/// 如果ignoreY为False，则对应八个象限的碰撞掩码：
+	/// 下层： |2|32|    上层：|8|128|  
+	///        |1|16|          |4|64 |
+	/// </summary>
+	/// <param name="x"></param>
+	/// <param name="y"></param>
+	/// <param name="z"></param>
+	/// <returns></returns>
+	int GetDetectedCode(float x, float y, float z, bool ignoreY);
 
-	int DetecedCode(float centerX, float centerY, float centerZ, float sizeX, float sizeY, float sizeZ, SceneSeparateTreeType treeType);
-
-    /// <summary>
-    /// 触发器位置
-    /// </summary>
-    Vector3 Position { get; }
+	/// <summary>
+	/// 触发器位置
+	/// </summary>
+	Vector3 Position { get; }
 }

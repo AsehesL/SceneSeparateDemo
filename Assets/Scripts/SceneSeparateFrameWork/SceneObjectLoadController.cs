@@ -2,6 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum TreeType
+{
+	/// <summary>
+	/// 线性四叉树
+	/// </summary>
+	LinearQuadTree,
+	/// <summary>
+	/// 线性八叉树
+	/// </summary>
+	LinearOcTree,
+	/// <summary>
+	/// 四叉树
+	/// </summary>
+	QuadTree,
+	/// <summary>
+	/// 八叉树
+	/// </summary>
+	OcTree,
+}
+
 /// <summary>
 /// 场景物件加载控制器
 /// </summary>
@@ -11,9 +31,9 @@ public class SceneObjectLoadController : MonoBehaviour
     private WaitForEndOfFrame m_WaitForFrame;
 
     /// <summary>
-    /// 当前场景资源四叉树
+    /// 当前场景资源四叉树/八叉树
     /// </summary>
-    private SceneSeparateTree<SceneObject> m_QuadTree;
+    private ISeparateTree<SceneObject> m_Tree;
 
     /// <summary>
     /// 刷新时间
@@ -68,11 +88,28 @@ public class SceneObjectLoadController : MonoBehaviour
     /// <param name="maxRefreshTime">更新区域时间间隔</param>
     /// <param name="maxDestroyTime">检查销毁时间间隔</param>
     /// <param name="quadTreeDepth">四叉树深度</param>
-    public void Init(Vector3 center, Vector3 size, bool asyn, int maxCreateCount, int minCreateCount, float maxRefreshTime, float maxDestroyTime, SceneSeparateTreeType treeType , int quadTreeDepth = 5)
+    public void Init(Vector3 center, Vector3 size, bool asyn, int maxCreateCount, int minCreateCount, float maxRefreshTime, float maxDestroyTime, TreeType treeType , int quadTreeDepth = 5)
     {
         if (m_IsInitialized)
             return;
-        m_QuadTree = new SceneSeparateTree<SceneObject>(treeType, center, size, quadTreeDepth);
+	    switch (treeType)
+	    {
+			case TreeType.LinearOcTree:
+				m_Tree = new LinearSceneOcTree<SceneObject>(center, size, quadTreeDepth);
+				break;
+			case TreeType.LinearQuadTree:
+				m_Tree = new LinearSceneQuadTree<SceneObject>(center, size, quadTreeDepth);
+				break;
+			case TreeType.OcTree:
+				m_Tree = new SceneTree<SceneObject>(center, size, quadTreeDepth, true);
+				break;
+			case TreeType.QuadTree:
+				m_Tree = new SceneTree<SceneObject>(center, size, quadTreeDepth, false);
+				break;
+			default:
+				m_Tree = new LinearSceneQuadTree<SceneObject>(center, size, quadTreeDepth);
+				break;
+	    }
         m_LoadedObjectList = new List<SceneObject>();
         //m_PreDestroyObjectQueue = new Queue<SceneObject>();
         m_PreDestroyObjectQueue = new PriorityQueue<SceneObject>(new SceneObjectWeightComparer());
@@ -95,7 +132,7 @@ public class SceneObjectLoadController : MonoBehaviour
     /// <param name="center">场景区域中心</param>
     /// <param name="size">场景区域大小</param>
     /// <param name="asyn">是否异步</param>
-    public void Init(Vector3 center, Vector3 size, bool asyn, SceneSeparateTreeType treeType)
+    public void Init(Vector3 center, Vector3 size, bool asyn, TreeType treeType)
     {
         Init(center, size, asyn, 25, 15, 1, 5, treeType);
     }
@@ -108,16 +145,16 @@ public class SceneObjectLoadController : MonoBehaviour
     /// <param name="asyn">是否异步</param>
     /// <param name="maxCreateCount">更新区域时间间隔</param>
     /// <param name="minCreateCount">检查销毁时间间隔</param>
-    public void Init(Vector3 center, Vector3 size, bool asyn, int maxCreateCount, int minCreateCount, SceneSeparateTreeType treeType)
+    public void Init(Vector3 center, Vector3 size, bool asyn, int maxCreateCount, int minCreateCount, TreeType treeType)
     {
         Init(center, size, asyn, maxCreateCount, minCreateCount, 1, 5, treeType);
     }
 
     void OnDestroy()
     {
-        if (m_QuadTree)
-            m_QuadTree.Clear();
-        m_QuadTree = null;
+        if (m_Tree != null)
+            m_Tree.Clear();
+        m_Tree = null;
         if (m_ProcessTaskQueue != null)
             m_ProcessTaskQueue.Clear();
         if (m_LoadedObjectList != null)
@@ -135,13 +172,13 @@ public class SceneObjectLoadController : MonoBehaviour
     {
         if (!m_IsInitialized)
             return;
-        if (m_QuadTree == null)
+        if (m_Tree == null)
             return;
         if (obj == null)
             return;
         //使用SceneObject包装
         SceneObject sbobj = new SceneObject(obj);
-        m_QuadTree.Add(sbobj);
+        m_Tree.Add(sbobj);
         //如果当前触发器存在，直接物体是否可触发，如果可触发，则创建物体
         if (m_CurrentDetector != null && m_CurrentDetector.IsDetected(sbobj.Bounds))
         {
@@ -168,7 +205,7 @@ public class SceneObjectLoadController : MonoBehaviour
                 m_RefreshTime = 0;
                 m_CurrentDetector = detector;
                 //进行触发检测
-                m_QuadTree.Trigger(detector, m_TriggerHandle);
+                m_Tree.Trigger(detector, m_TriggerHandle);
                 //标记超出区域的物体
                 MarkOutofBoundsObjs();
                 //m_IsInitLoadComplete = true;
@@ -447,8 +484,8 @@ public class SceneObjectLoadController : MonoBehaviour
         Color maxdcolor = new Color32(133, 165, 255, 255);
         Color objcolor = new Color32(0, 210, 255, 255);
         Color hitcolor = new Color32(255, 216, 0, 255);
-        if (m_QuadTree != null)
-            m_QuadTree.DrawTree(mindcolor, maxdcolor, objcolor, hitcolor, debug_DrawMinDepth, debug_DrawMaxDepth, debug_DrawObj);
+        if (m_Tree != null)
+            m_Tree.DrawTree(mindcolor, maxdcolor, objcolor, hitcolor, debug_DrawMinDepth, debug_DrawMaxDepth, debug_DrawObj);
     }
 #endif
 }

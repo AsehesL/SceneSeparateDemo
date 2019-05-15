@@ -75,6 +75,8 @@ public class Example : MonoBehaviour
 
     public SceneDetectorBase detector;
 
+	public TreeType treeType = TreeType.LinearQuadTree;
+
     private SceneObjectLoadController m_Controller;
 
     void Start()
@@ -82,7 +84,7 @@ public class Example : MonoBehaviour
         m_Controller = gameObject.GetComponent<SceneObjectLoadController>();
         if (m_Controller == null)
             m_Controller = gameObject.AddComponent<SceneObjectLoadController>();
-        m_Controller.Init(bounds.center, bounds.size, asyn, SceneSeparateTreeType.QuadTree);
+        m_Controller.Init(bounds.center, bounds.size, asyn, treeType);
 
 
         for (int i = 0; i < loadObjects.Count; i++)

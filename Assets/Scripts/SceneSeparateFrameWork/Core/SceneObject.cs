@@ -76,7 +76,9 @@ public class SceneObject : ISceneObject, ISOLinkedListNode
 
     private float m_Weight;
 
-    private System.Object m_Node;
+	//private System.Object m_Node;
+
+	private Dictionary<uint, System.Object> m_Nodes;
 
     public SceneObject(ISceneObject obj)
     {
@@ -84,17 +86,36 @@ public class SceneObject : ISceneObject, ISOLinkedListNode
         m_TargetObj = obj;
     }
 
-    public LinkedListNode<T> GetLinkedListNode<T>() where T : ISceneObject
-    {
-        return (LinkedListNode<T>)m_Node;
-    }
+	//public LinkedListNode<T> GetLinkedListNode<T>() where T : ISceneObject
+	//{
+	//    return (LinkedListNode<T>)m_Node;
+	//}
 
-    public void SetLinkedListNode<T>(LinkedListNode<T> node)
-    {
-        m_Node = node;
-    }
+	//public void SetLinkedListNode<T>(LinkedListNode<T> node)
+	//{
+	//    m_Node = node;
+	//}
 
-    public void OnHide()
+	public Dictionary<uint, System.Object> GetNodes<T>() where T : ISceneObject
+	{
+		return m_Nodes;
+	}
+
+	public LinkedListNode<T> GetLinkedListNode<T>(uint morton) where T : ISceneObject
+	{
+		if (m_Nodes != null && m_Nodes.ContainsKey(morton))
+			return (LinkedListNode<T>)m_Nodes[morton];
+		return null;
+	}
+
+	public void SetLinkedListNode<T>(uint morton, LinkedListNode<T> node)
+	{
+		if (m_Nodes == null)
+			m_Nodes = new Dictionary<uint, object>();
+		m_Nodes[morton] = node;
+	}
+
+	public void OnHide()
     {
         Weight = 0;
         m_TargetObj.OnHide();

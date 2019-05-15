@@ -29,7 +29,12 @@ public interface ISceneObject
 
 public interface ISOLinkedListNode
 {
-    LinkedListNode<T> GetLinkedListNode<T>() where T : ISceneObject;
 
-    void SetLinkedListNode<T>(LinkedListNode<T> node);
+	Dictionary<uint, System.Object> GetNodes<T>() where T : ISceneObject;
+
+	LinkedListNode<T> GetLinkedListNode<T>(uint morton) where T : ISceneObject;
+
+	void SetLinkedListNode<T>(uint morton, LinkedListNode<T> node);
+
+	//void ClearLinkedListNode(int morton);
 }

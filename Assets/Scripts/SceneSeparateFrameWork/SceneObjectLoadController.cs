@@ -52,15 +52,14 @@ public class SceneObjectLoadController : MonoBehaviour
     /// </summary>
     private Queue<SceneObject> m_ProcessTaskQueue;
 
-    /// <summary>
-    /// 已加载的物体列表
-    /// </summary>
-    private List<SceneObject> m_LoadedObjectList;
+	/// <summary>
+	/// 已加载的物体列表（频繁移除与添加使用双向链表）
+	/// </summary>
+	private LinkedList<SceneObject> m_LoadedObjectLinkedList;
 
     /// <summary>
     /// 待销毁物体列表
     /// </summary>
-    //private Queue<SceneObject> m_PreDestroyObjectQueue;
     private PriorityQueue<SceneObject> m_PreDestroyObjectQueue;
 
     private TriggerHandle<SceneObject> m_TriggerHandle;
@@ -92,7 +91,8 @@ public class SceneObjectLoadController : MonoBehaviour
     {
         if (m_IsInitialized)
             return;
-	    switch (treeType)
+
+		switch (treeType)
 	    {
 			case TreeType.LinearOcTree:
 				m_Tree = new LinearSceneOcTree<SceneObject>(center, size, quadTreeDepth);
@@ -110,8 +110,8 @@ public class SceneObjectLoadController : MonoBehaviour
 				m_Tree = new LinearSceneQuadTree<SceneObject>(center, size, quadTreeDepth);
 				break;
 	    }
-        m_LoadedObjectList = new List<SceneObject>();
-        //m_PreDestroyObjectQueue = new Queue<SceneObject>();
+
+	    m_LoadedObjectLinkedList = new LinkedList<SceneObject>();
         m_PreDestroyObjectQueue = new PriorityQueue<SceneObject>(new SceneObjectWeightComparer());
         m_TriggerHandle = new TriggerHandle<SceneObject>(this.TriggerHandle); 
 
@@ -157,11 +157,11 @@ public class SceneObjectLoadController : MonoBehaviour
         m_Tree = null;
         if (m_ProcessTaskQueue != null)
             m_ProcessTaskQueue.Clear();
-        if (m_LoadedObjectList != null)
-            m_LoadedObjectList.Clear();
-        m_ProcessTaskQueue = null;
-        m_LoadedObjectList = null;
-        m_TriggerHandle = null;
+	    if (m_LoadedObjectLinkedList != null)
+		    m_LoadedObjectLinkedList.Clear();
+		m_ProcessTaskQueue = null;
+	    m_LoadedObjectLinkedList = null;
+		m_TriggerHandle = null;
     }
 
     /// <summary>
@@ -246,7 +246,8 @@ public class SceneObjectLoadController : MonoBehaviour
             data.Flag = SceneObject.CreateFlag.New;
             //if (m_PreDestroyObjectList.Remove(data))
             {
-                m_LoadedObjectList.Add(data);
+	            m_LoadedObjectLinkedList.AddFirst(data);
+
             }
         }
         else if (data.Flag == SceneObject.CreateFlag.None) //如果发生触发的物体未创建则创建该物体并加入已加载的物体列表
@@ -257,9 +258,9 @@ public class SceneObjectLoadController : MonoBehaviour
 
     //执行创建物体
     private void DoCreateInternal(SceneObject data)
-    {
-        //加入已加载列表
-        m_LoadedObjectList.Add(data);
+	{
+		//加入已加载列表
+		m_LoadedObjectLinkedList.AddFirst(data);
         //创建物体
         CreateObject(data, m_Asyn);
     }
@@ -269,33 +270,35 @@ public class SceneObjectLoadController : MonoBehaviour
     /// </summary>
     void MarkOutofBoundsObjs()
     {
-        if (m_LoadedObjectList == null)
-            return;
-        int i = 0;
-        while (i < m_LoadedObjectList.Count)
-        {
-            if (m_LoadedObjectList[i].Flag == SceneObject.CreateFlag.Old)//已加载物体标记仍然为Old，说明该物体没有进入触发区域，即该物体在区域外
-            {
-                m_LoadedObjectList[i].Flag = SceneObject.CreateFlag.OutofBounds;
-                //m_PreDestroyObjectList.Add(m_LoadedObjectList[i]);
-                if (m_MinCreateCount == 0)//如果最小创建数为0直接删除
-                {
-                    DestroyObject(m_LoadedObjectList[i], m_Asyn);
-                }
-                else
-                {
-                    //m_PreDestroyObjectQueue.Enqueue(m_LoadedObjectList[i]);
-                    m_PreDestroyObjectQueue.Push(m_LoadedObjectList[i]);//加入待删除队列
-                }
-                m_LoadedObjectList.RemoveAt(i);
+	    if (m_LoadedObjectLinkedList == null)
+		    return;
 
-            }
-            else
-            {
-                m_LoadedObjectList[i].Flag = SceneObject.CreateFlag.Old;//其它物体标记为旧
-                i++;
-            }
-        }
+	    var node = m_LoadedObjectLinkedList.First;
+	    while (node != null)
+	    {
+		    var obj = node.Value;
+		    if (obj.Flag == SceneObject.CreateFlag.Old)//已加载物体标记仍然为Old，说明该物体没有进入触发区域，即该物体在区域外
+		    {
+			    obj.Flag = SceneObject.CreateFlag.OutofBounds;
+			    if (m_MinCreateCount == 0)//如果最小创建数为0直接删除
+			    {
+				    DestroyObject(obj, m_Asyn);
+			    }
+			    else
+			    {
+				    m_PreDestroyObjectQueue.Push(obj);//加入待删除队列
+			    }
+
+			    var next = node.Next;
+			    m_LoadedObjectLinkedList.Remove(node);
+				node = next;
+			}
+		    else
+		    {
+			    obj.Flag = SceneObject.CreateFlag.Old;
+			    node = node.Next;
+		    }
+	    }
     }
 
     /// <summary>
@@ -305,8 +308,7 @@ public class SceneObjectLoadController : MonoBehaviour
     {
         while(m_PreDestroyObjectQueue.Count>m_MinCreateCount)
         {
-
-            //var obj = m_PreDestroyObjectQueue.Dequeue();
+			
             var obj = m_PreDestroyObjectQueue.Pop();
             if (obj == null)
                 continue;

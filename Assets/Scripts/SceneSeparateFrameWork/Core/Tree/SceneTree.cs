@@ -179,10 +179,23 @@ public class SceneTreeNode<T> where T : ISceneObject, ISOLinkedListNode
 		var node = obj.GetLinkedListNode<T>(0);
 		if (node != null)
 		{
-			m_ObjectList.Remove(node);
-			obj.GetNodes<T>().Clear();
+			if (node.List == m_ObjectList)
+			{
+				m_ObjectList.Remove(node);
+				var nodes = obj.GetNodes();
+				if (nodes != null)
+					nodes.Clear();
+				return;
+			}
 		}
-
+		if (m_ChildNodes != null && m_ChildNodes.Length > 0)
+		{
+			for (int i = 0; i < m_ChildNodes.Length; i++)
+			{
+				if (m_ChildNodes[i] != null)
+					m_ChildNodes[i].Remove(obj);
+			}
+		}
 		//{
 		//    return true;
 		//}

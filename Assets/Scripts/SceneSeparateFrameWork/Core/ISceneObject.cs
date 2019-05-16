@@ -30,7 +30,7 @@ public interface ISceneObject
 public interface ISOLinkedListNode
 {
 
-	Dictionary<uint, System.Object> GetNodes<T>() where T : ISceneObject;
+	Dictionary<uint, System.Object> GetNodes();
 
 	LinkedListNode<T> GetLinkedListNode<T>(uint morton) where T : ISceneObject;
 

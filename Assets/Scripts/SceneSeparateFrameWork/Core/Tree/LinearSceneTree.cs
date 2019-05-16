@@ -55,7 +55,7 @@ public abstract class LinearSceneTree<T> : ISeparateTree<T> where T : ISceneObje
 			return;
 		if (m_Nodes == null)
 			return;
-		var nodes = item.GetNodes<T>();
+		var nodes = item.GetNodes();
 		if (nodes == null)
 			return;
 		foreach (var node in nodes)
@@ -65,7 +65,9 @@ public abstract class LinearSceneTree<T> : ISeparateTree<T> where T : ISceneObje
 				var n = m_Nodes[node.Key];
 				if (n != null && n.Datas != null)
 				{
-					n.Datas.Remove((LinkedListNode<T>)node.Value);
+					var value = (LinkedListNode<T>) node.Value;
+					if (value.List == n.Datas)
+						n.Datas.Remove(value);
 				}
 			}
 		}

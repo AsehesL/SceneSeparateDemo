@@ -96,7 +96,7 @@ public class SceneObject : ISceneObject, ISOLinkedListNode
 	//    m_Node = node;
 	//}
 
-	public Dictionary<uint, System.Object> GetNodes<T>() where T : ISceneObject
+	public Dictionary<uint, System.Object> GetNodes()
 	{
 		return m_Nodes;
 	}

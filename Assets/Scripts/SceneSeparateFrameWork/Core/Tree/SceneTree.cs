@@ -59,9 +59,16 @@ public class SceneTree<T> : ISeparateTree<T> where T : ISceneObject, ISOLinkedLi
 	{
 		if (handle == null)
 			return;
-		if (detector.IsDetected(Bounds) == false)
-			return;
-		m_Root.Trigger(detector, handle);
+		if (detector.UseCameraCulling)
+		{
+			m_Root.Trigger(detector, handle);
+		}
+		else
+		{
+			if (detector.IsDetected(Bounds) == false)
+				return;
+			m_Root.Trigger(detector, handle);
+		}
 	}
 
 	public static implicit operator bool(SceneTree<T> tree)
@@ -187,24 +194,220 @@ public class SceneTreeNode<T> where T : ISceneObject, ISOLinkedListNode
 		if (handle == null)
 			return;
 
-		int code = detector.GetDetectedCode(m_Bounds.center.x, m_Bounds.center.y, m_Bounds.center.z, m_ChildCount == 4);
-		for (int i = 0; i < m_ChildNodes.Length; i++)
+		if (detector.UseCameraCulling)
 		{
-			var node = m_ChildNodes[i];
-			if (node != null && (code & (1 << i)) != 0)
+			TreeCullingCode code = new TreeCullingCode()
 			{
-				node.Trigger(detector, handle);
+				leftbottomback = detector.GetDetectedCode(m_Bounds.min.x, m_Bounds.min.y, m_Bounds.min.z, true),
+				leftbottomforward = detector.GetDetectedCode(m_Bounds.min.x, m_Bounds.min.y, m_Bounds.max.z, true),
+				lefttopback = detector.GetDetectedCode(m_Bounds.min.x, m_Bounds.max.y, m_Bounds.min.z, true),
+				lefttopforward = detector.GetDetectedCode(m_Bounds.min.x, m_Bounds.max.y, m_Bounds.max.z, true),
+				rightbottomback = detector.GetDetectedCode(m_Bounds.max.x, m_Bounds.min.y, m_Bounds.min.z, true),
+				rightbottomforward = detector.GetDetectedCode(m_Bounds.max.x, m_Bounds.min.y, m_Bounds.max.z, true),
+				righttopback = detector.GetDetectedCode(m_Bounds.max.x, m_Bounds.max.y, m_Bounds.min.z, true),
+				righttopforward = detector.GetDetectedCode(m_Bounds.max.x, m_Bounds.max.y, m_Bounds.max.z, true),
+			};
+			TriggerByCamera(detector, handle, code);
+		}
+		else
+		{
+			int code = detector.GetDetectedCode(m_Bounds.center.x, m_Bounds.center.y, m_Bounds.center.z, m_ChildCount == 4);
+			for (int i = 0; i < m_ChildNodes.Length; i++)
+			{
+				var node = m_ChildNodes[i];
+				if (node != null && (code & (1 << i)) != 0)
+				{
+					node.Trigger(detector, handle);
+				}
+			}
+
+			{
+				var node = m_ObjectList.First;
+				while (node != null)
+				{
+					if (detector.IsDetected(node.Value.Bounds))
+						handle(node.Value);
+					node = node.Next;
+				}
 			}
 		}
+	}
 
+	private void TriggerByCamera(IDetector detector, TriggerHandle<T> handle, TreeCullingCode code)
+	{
+		if (code.IsCulled())
+			return;
+
+		var node = m_ObjectList.First;
+		while (node != null)
 		{
-			var node = m_ObjectList.First;
-			while (node != null)
+			if (detector.IsDetected(node.Value.Bounds))
+				handle(node.Value);
+			node = node.Next;
+		}
+
+
+		float centerx = m_Bounds.center.x, centery = m_Bounds.center.y, centerz = m_Bounds.center.z;
+		float sx = m_Bounds.size.x * 0.5f, sy = m_Bounds.size.y * 0.5f, sz = m_Bounds.size.z * 0.5f;
+		int leftbottommiddle = detector.GetDetectedCode(centerx - sx, centery - sy, centerz, true);
+		int middlebottommiddle = detector.GetDetectedCode(centerx, centery - sy, centerz, true);
+		int rightbottommiddle = detector.GetDetectedCode(centerx + sx, centery - sy, centerz, true);
+		int middlebottomback = detector.GetDetectedCode(centerx, centery - sy, centerz - sz, true);
+		int middlebottomforward = detector.GetDetectedCode(centerx, centery - sy, centerz + sz, true);
+
+		int lefttopmiddle = detector.GetDetectedCode(centerx - sx, centery + sy, centerz, true);
+		int middletopmiddle = detector.GetDetectedCode(centerx, centery + sy, centerz, true);
+		int righttopmiddle = detector.GetDetectedCode(centerx + sx, centery + sy, centerz, true);
+		int middletopback = detector.GetDetectedCode(centerx, centery + sy, centerz - sz, true);
+		int middletopforward = detector.GetDetectedCode(centerx, centery + sy, centerz + sz, true);
+		if (m_ChildCount == 8)
+		{
+			int leftmiddleback = detector.GetDetectedCode(centerx - sx, centery, centerz - sz, true);
+			int leftmiddlemiddle = detector.GetDetectedCode(centerx - sx, centery, centerz, true);
+			int leftmiddleforward = detector.GetDetectedCode(centerx - sx, centery, centerz + sz, true);
+			int middlemiddleback = detector.GetDetectedCode(centerx, centery, centerz - sz, true);
+			int middlemiddlemiddle = detector.GetDetectedCode(centerx, centery, centerz, true);
+			int middlemiddleforward = detector.GetDetectedCode(centerx, centery, centerz + sz, true);
+			int rightmiddleback = detector.GetDetectedCode(centerx + sx, centery, centerz - sz, true);
+			int rightmiddlemiddle = detector.GetDetectedCode(centerx + sx, centery, centerz, true);
+			int rightmiddleforward = detector.GetDetectedCode(centerx + sx, centery, centerz + sz, true);
+
+			if(m_ChildNodes.Length >0 && m_ChildNodes[0] != null) m_ChildNodes[0].TriggerByCamera(detector, handle, new TreeCullingCode()
 			{
-				if (detector.IsDetected(node.Value.Bounds))
-					handle(node.Value);
-				node = node.Next;
-			}
+				leftbottomback = code.leftbottomback,
+				leftbottomforward = leftbottommiddle,
+				lefttopback = leftmiddleback,
+				lefttopforward = leftmiddlemiddle,
+				rightbottomback = middlebottomback,
+				rightbottomforward = middlebottommiddle,
+				righttopback = middlemiddleback,
+				righttopforward = middlemiddlemiddle,
+			});
+			if (m_ChildNodes.Length > 1 && m_ChildNodes[1] != null) m_ChildNodes[1].TriggerByCamera(detector, handle, new TreeCullingCode()
+			{
+				leftbottomback = leftbottommiddle,
+				leftbottomforward = code.leftbottomforward,
+				lefttopback = leftmiddlemiddle,
+				lefttopforward = leftmiddleforward,
+				rightbottomback = middlebottommiddle,
+				rightbottomforward = middlebottomforward,
+				righttopback = middlemiddlemiddle,
+				righttopforward = middlemiddleforward,
+			});
+			if (m_ChildNodes.Length > 2 && m_ChildNodes[2] != null) m_ChildNodes[2].TriggerByCamera(detector, handle, new TreeCullingCode()
+			{
+				leftbottomback = leftmiddleback,
+				leftbottomforward = leftmiddlemiddle,
+				lefttopback = code.lefttopback,
+				lefttopforward = lefttopmiddle,
+				rightbottomback = middlemiddleback,
+				rightbottomforward = middlemiddlemiddle,
+				righttopback = middletopback,
+				righttopforward = middletopmiddle,
+			});
+			if (m_ChildNodes.Length > 3 && m_ChildNodes[3] != null) m_ChildNodes[3].TriggerByCamera(detector, handle, new TreeCullingCode()
+			{
+				leftbottomback = leftmiddlemiddle,
+				leftbottomforward = leftmiddleforward,
+				lefttopback = lefttopmiddle,
+				lefttopforward = code.lefttopforward,
+				rightbottomback = middlemiddlemiddle,
+				rightbottomforward = middlemiddleforward,
+				righttopback = middletopmiddle,
+				righttopforward = middletopforward,
+			});
+
+			if (m_ChildNodes.Length > 4 && m_ChildNodes[4] != null) m_ChildNodes[4].TriggerByCamera(detector, handle, new TreeCullingCode()
+			{
+				leftbottomback = middlebottomback,
+				leftbottomforward = middlebottommiddle,
+				lefttopback = middlemiddleback,
+				lefttopforward = middlemiddlemiddle,
+				rightbottomback = code.rightbottomback,
+				rightbottomforward = rightbottommiddle,
+				righttopback = rightmiddleback,
+				righttopforward = rightmiddlemiddle,
+			});
+			if (m_ChildNodes.Length > 5 && m_ChildNodes[5] != null) m_ChildNodes[5].TriggerByCamera(detector, handle, new TreeCullingCode()
+			{
+				leftbottomback = middlebottommiddle,
+				leftbottomforward = middlebottomforward,
+				lefttopback = middlemiddlemiddle,
+				lefttopforward = middlemiddleforward,
+				rightbottomback = rightbottommiddle,
+				rightbottomforward = code.rightbottomforward,
+				righttopback = rightmiddlemiddle,
+				righttopforward = rightmiddleforward,
+			});
+			if (m_ChildNodes.Length > 6 && m_ChildNodes[6] != null) m_ChildNodes[6].TriggerByCamera(detector, handle, new TreeCullingCode()
+			{
+				leftbottomback = middlemiddleback,
+				leftbottomforward = middlemiddlemiddle,
+				lefttopback = middletopback,
+				lefttopforward = middletopmiddle,
+				rightbottomback = rightmiddleback,
+				rightbottomforward = rightmiddlemiddle,
+				righttopback = code.righttopback,
+				righttopforward = righttopmiddle,
+			});
+			if (m_ChildNodes.Length > 7 && m_ChildNodes[7] != null) m_ChildNodes[7].TriggerByCamera(detector, handle, new TreeCullingCode()
+			{
+				leftbottomback = middlemiddlemiddle,
+				leftbottomforward = middlemiddleforward,
+				lefttopback = middletopmiddle,
+				lefttopforward = middletopforward,
+				rightbottomback = rightmiddlemiddle,
+				rightbottomforward = rightmiddleforward,
+				righttopback = righttopmiddle,
+				righttopforward = code.righttopforward,
+			});
+		}
+		else
+		{
+			if (m_ChildNodes.Length > 0 && m_ChildNodes[0] != null) m_ChildNodes[0].TriggerByCamera(detector, handle, new TreeCullingCode()
+				{
+					leftbottomback = code.leftbottomback,
+					leftbottomforward = leftbottommiddle,
+					lefttopback = code.lefttopback,
+					lefttopforward = lefttopmiddle,
+					rightbottomback = middlebottomback,
+					rightbottomforward = middlebottommiddle,
+					righttopback = middletopback,
+					righttopforward = middletopmiddle,
+				});
+			if (m_ChildNodes.Length > 1 && m_ChildNodes[1] != null) m_ChildNodes[1].TriggerByCamera(detector, handle, new TreeCullingCode()
+				{
+					leftbottomback = leftbottommiddle,
+					leftbottomforward = code.leftbottomforward,
+					lefttopback = lefttopmiddle,
+					lefttopforward = code.lefttopforward,
+					rightbottomback = middlebottommiddle,
+					rightbottomforward = middlebottomforward,
+					righttopback = middletopmiddle,
+					righttopforward = middletopforward,
+				});
+			if (m_ChildNodes.Length > 2 && m_ChildNodes[2] != null) m_ChildNodes[2].TriggerByCamera(detector, handle, new TreeCullingCode()
+				{
+					leftbottomback = middlebottomback,
+					leftbottomforward = middlebottommiddle,
+					lefttopback = middletopback,
+					lefttopforward = middletopmiddle,
+					rightbottomback = code.rightbottomback,
+					rightbottomforward = rightbottommiddle,
+					righttopback = code.righttopback,
+					righttopforward = righttopmiddle,
+				});
+			if (m_ChildNodes.Length > 3 && m_ChildNodes[3] != null) m_ChildNodes[3].TriggerByCamera(detector, handle, new TreeCullingCode()
+				{
+					leftbottomback = middlebottommiddle,
+					leftbottomforward = middlebottomforward,
+					lefttopback = middletopmiddle,
+					lefttopforward = middletopforward,
+					rightbottomback = rightbottommiddle,
+					rightbottomforward = code.rightbottomforward,
+					righttopback = righttopmiddle,
+					righttopforward = code.righttopforward,
+				});
 		}
 	}
 

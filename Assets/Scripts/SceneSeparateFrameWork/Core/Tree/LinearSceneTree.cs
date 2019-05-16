@@ -4,23 +4,6 @@ using System.Collections.Generic;
 
 public abstract class LinearSceneTree<T> : ISeparateTree<T> where T : ISceneObject, ISOLinkedListNode
 {
-	protected struct CullingCode
-	{
-		public int leftbottomback;
-		public int leftbottomforward;
-		public int lefttopback;
-		public int lefttopforward;
-		public int rightbottomback;
-		public int rightbottomforward;
-		public int righttopback;
-		public int righttopforward;
-
-		public bool IsCulled()
-		{
-			return (leftbottomback & leftbottomforward & lefttopback & lefttopforward
-			        & rightbottomback & rightbottomforward & righttopback & righttopforward) != 0;
-		}
-	}
 
 	public Bounds Bounds
 	{

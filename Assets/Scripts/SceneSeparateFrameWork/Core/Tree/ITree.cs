@@ -34,3 +34,21 @@ public interface ISeparateTree<T> where T : ISceneObject, ISOLinkedListNode
 		int drawMaxDepth, bool drawObj);
 #endif
 }
+
+public struct TreeCullingCode
+{
+	public int leftbottomback;
+	public int leftbottomforward;
+	public int lefttopback;
+	public int lefttopforward;
+	public int rightbottomback;
+	public int rightbottomforward;
+	public int righttopback;
+	public int righttopforward;
+
+	public bool IsCulled()
+	{
+		return (leftbottomback & leftbottomforward & lefttopback & lefttopforward
+		        & rightbottomback & rightbottomforward & righttopback & righttopforward) != 0;
+	}
+}

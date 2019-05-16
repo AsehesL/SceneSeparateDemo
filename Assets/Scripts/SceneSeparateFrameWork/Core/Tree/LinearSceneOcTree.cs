@@ -47,7 +47,7 @@ public class LinearSceneOcTree<T> : LinearSceneTree<T> where T : ISceneObject, I
 		if (detector.UseCameraCulling)
 		{
 			//如果使用相机裁剪，则计算出八个角点的裁剪掩码，且子节点的裁剪检测可以复用部分父节点的角点
-			CullingCode code = new CullingCode()
+			TreeCullingCode code = new TreeCullingCode()
 			{
 				leftbottomback = detector.GetDetectedCode(m_Bounds.min.x, m_Bounds.min.y, m_Bounds.min.z, true),
 				leftbottomforward = detector.GetDetectedCode(m_Bounds.min.x, m_Bounds.min.y, m_Bounds.max.z, true),
@@ -137,7 +137,7 @@ public class LinearSceneOcTree<T> : LinearSceneTree<T> where T : ISceneObject, I
 		}
 	}
 
-	private void TriggerToNodeByCamera(IDetector detector, TriggerHandle<T> handle, int depth, CullingCode cullingCode, float centerx, float centery, float centerz, float sizex, float sizey,
+	private void TriggerToNodeByCamera(IDetector detector, TriggerHandle<T> handle, int depth, TreeCullingCode cullingCode, float centerx, float centery, float centerz, float sizex, float sizey,
 		float sizez)
 	{
 		if (cullingCode.IsCulled())
@@ -175,7 +175,7 @@ public class LinearSceneOcTree<T> : LinearSceneTree<T> where T : ISceneObject, I
 			int middletopback = detector.GetDetectedCode(centerx, centery + sy, centerz - sz, true);
 			int middletopforward = detector.GetDetectedCode(centerx, centery + sy, centerz + sz, true);
 
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 			{
 				leftbottomback = cullingCode.leftbottomback,
 				leftbottomforward = leftbottommiddle,
@@ -186,7 +186,7 @@ public class LinearSceneOcTree<T> : LinearSceneTree<T> where T : ISceneObject, I
 				righttopback = middlemiddleback,
 				righttopforward = middlemiddlemiddle,
 			}, centerx - sx * 0.5f, centery - sy * 0.5f, centerz - sz * 0.5f, sx, sy, sz);
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 				{
 					leftbottomback = leftbottommiddle,
 					leftbottomforward = cullingCode.leftbottomforward,
@@ -197,7 +197,7 @@ public class LinearSceneOcTree<T> : LinearSceneTree<T> where T : ISceneObject, I
 					righttopback = middlemiddlemiddle,
 					righttopforward = middlemiddleforward,
 				}, centerx - sx * 0.5f, centery - sy * 0.5f, centerz + sz * 0.5f, sx, sy, sz);
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 				{
 					leftbottomback = leftmiddleback,
 					leftbottomforward = leftmiddlemiddle,
@@ -208,7 +208,7 @@ public class LinearSceneOcTree<T> : LinearSceneTree<T> where T : ISceneObject, I
 					righttopback = middletopback,
 					righttopforward = middletopmiddle,
 				}, centerx - sx * 0.5f, centery + sy * 0.5f, centerz - sz * 0.5f, sx, sy, sz);
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 				{
 					leftbottomback = leftmiddlemiddle,
 					leftbottomforward = leftmiddleforward,
@@ -220,7 +220,7 @@ public class LinearSceneOcTree<T> : LinearSceneTree<T> where T : ISceneObject, I
 					righttopforward = middletopforward,
 				}, centerx - sx * 0.5f, centery + sy * 0.5f, centerz + sz * 0.5f, sx, sy, sz);
 
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 			{
 				leftbottomback = middlebottomback,
 				leftbottomforward = middlebottommiddle,
@@ -231,7 +231,7 @@ public class LinearSceneOcTree<T> : LinearSceneTree<T> where T : ISceneObject, I
 				righttopback = rightmiddleback,
 				righttopforward = rightmiddlemiddle,
 			}, centerx + sx * 0.5f, centery - sy * 0.5f, centerz - sz * 0.5f, sx, sy, sz);
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 			{
 				leftbottomback = middlebottommiddle,
 				leftbottomforward = middlebottomforward,
@@ -242,7 +242,7 @@ public class LinearSceneOcTree<T> : LinearSceneTree<T> where T : ISceneObject, I
 				righttopback = rightmiddlemiddle,
 				righttopforward = rightmiddleforward,
 			}, centerx + sx * 0.5f, centery - sy * 0.5f, centerz + sz * 0.5f, sx, sy, sz);
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 			{
 				leftbottomback = middlemiddleback,
 				leftbottomforward = middlemiddlemiddle,
@@ -253,7 +253,7 @@ public class LinearSceneOcTree<T> : LinearSceneTree<T> where T : ISceneObject, I
 				righttopback = cullingCode.righttopback,
 				righttopforward = righttopmiddle,
 			}, centerx + sx * 0.5f, centery + sy * 0.5f, centerz - sz * 0.5f, sx, sy, sz);
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 			{
 				leftbottomback = middlemiddlemiddle,
 				leftbottomforward = middlemiddleforward,

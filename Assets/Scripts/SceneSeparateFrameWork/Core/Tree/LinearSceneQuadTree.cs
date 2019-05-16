@@ -44,7 +44,7 @@ public class LinearSceneQuadTree<T> : LinearSceneTree<T> where T : ISceneObject,
 			return;
 		if (detector.UseCameraCulling)
 		{
-			CullingCode code = new CullingCode()
+			TreeCullingCode code = new TreeCullingCode()
 			{
 				leftbottomback = detector.GetDetectedCode(m_Bounds.min.x, m_Bounds.min.y, m_Bounds.min.z, true),
 				leftbottomforward = detector.GetDetectedCode(m_Bounds.min.x, m_Bounds.min.y, m_Bounds.max.z, true),
@@ -116,7 +116,7 @@ public class LinearSceneQuadTree<T> : LinearSceneTree<T> where T : ISceneObject,
 		}
 	}
 
-	private void TriggerToNodeByCamera(IDetector detector, TriggerHandle<T> handle, int depth, CullingCode cullingCode, float centerx, float centerz, float sizex,
+	private void TriggerToNodeByCamera(IDetector detector, TriggerHandle<T> handle, int depth, TreeCullingCode cullingCode, float centerx, float centerz, float sizex,
 		float sizez)
 	{
 		if (cullingCode.IsCulled())
@@ -144,7 +144,7 @@ public class LinearSceneQuadTree<T> : LinearSceneTree<T> where T : ISceneObject,
 			int middletopback = detector.GetDetectedCode(centerx, m_Bounds.max.y, centerz - sz, true);
 			int middletopforward = detector.GetDetectedCode(centerx, m_Bounds.max.y, centerz + sz, true);
 
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 				{
 					leftbottomback = cullingCode.leftbottomback,
 					leftbottomforward = leftbottommiddle,
@@ -155,7 +155,7 @@ public class LinearSceneQuadTree<T> : LinearSceneTree<T> where T : ISceneObject,
 					righttopback = middletopback,
 					righttopforward = middletopmiddle,
 				}, centerx - sx * 0.5f, centerz - sz * 0.5f, sx, sz);
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 				{
 					leftbottomback = leftbottommiddle,
 					leftbottomforward = cullingCode.leftbottomforward,
@@ -166,7 +166,7 @@ public class LinearSceneQuadTree<T> : LinearSceneTree<T> where T : ISceneObject,
 					righttopback = middletopmiddle,
 					righttopforward = middletopforward,
 				}, centerx - sx * 0.5f, centerz + sz * 0.5f, sx, sz);
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 				{
 					leftbottomback = middlebottomback,
 					leftbottomforward = middlebottommiddle,
@@ -177,7 +177,7 @@ public class LinearSceneQuadTree<T> : LinearSceneTree<T> where T : ISceneObject,
 					righttopback = cullingCode.righttopback,
 					righttopforward = righttopmiddle,
 				}, centerx + sx * 0.5f, centerz - sz * 0.5f, sx, sz);
-			TriggerToNodeByCamera(detector, handle, depth + 1, new CullingCode()
+			TriggerToNodeByCamera(detector, handle, depth + 1, new TreeCullingCode()
 				{
 					leftbottomback = middlebottommiddle,
 					leftbottomforward = middlebottomforward,
